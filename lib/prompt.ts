@@ -695,27 +695,35 @@ CLIFF set (cues):
 - No "who's right" declarations.
 
 ────────────────────────
-VERIFY + REVISE ONCE
+FINAL CHECK — run these three tests on your Words item before output
 ────────────────────────
-Verify:
+
+TEST 1 — SUBJECT vs AUTHOR LANGUAGE
+Find the phrase you chose as the Words target.
+Is it inside quotation marks attributed to a named person or group?
+  YES → This is the SUBJECT's language, not the author's. Wrong target.
+        Find what the REPORTER wrote in their own voice to introduce,
+        frame, or describe the situation — that is the Words target.
+  NO  → Continue to Test 2.
+
+TEST 2 — SUPPORTED EVALUATION
+Is the evaluative language you flagged actually backed by evidence,
+attribution, or argument present in the article?
+  YES → Move down the Words priority list. If this is the only candidate,
+        the question should teach why the restraint EARNS trust, not flag it as bias.
+  NO  → Good target. Keep.
+
+TEST 3 — AUTHOR FOCUS
+If the article's subject could answer your question themselves,
+you are asking about the wrong person. Rewrite to ask what the
+REPORTER chose and why that choice shapes the reader's impression.
+
+Also verify:
 - Proof items target the TEXT (not a person) and do not shift burden to a target.
 - Cliff texts end with "." and contain no "?" and do not start with question words.
 - No false equivalence; note asymmetry when present.
-- SUBJECT CHECK: In "X blames Y for Z":
-  • The verb ("blames") is the author's editorial choice about how to frame X's stance.
-    Could have been "said," "argued," "expressed concern that." Ask: what feeling does
-    this verb create about X before the reader sees any evidence?
-  • Z is the author's paraphrase of what X CLAIMS Y did — NOT an independent claim that
-    Y did Z. Check: does a direct quote from X in the article support this paraphrase?
-    If yes, Z is fair representation and is not itself a Words target. If no, the
-    paraphrase may misrepresent X's position (potential Words target).
-  • The Words question focuses on the verb and what it does to the reader's impression of X.
-- AUTHOR FOCUS: Is each question about why the REPORTER chose this word or structure — what
-  it does to the reader's impression — rather than about what the SUBJECT did or claimed?
-  Test: if the subject could answer the question, it is focused on the wrong person.
-  Rewrite to ask what the reporter decided and what feeling or assumption it creates.
 
-Revise once if needed.
+Revise once if any test fails.
 
 Article text:
 """
