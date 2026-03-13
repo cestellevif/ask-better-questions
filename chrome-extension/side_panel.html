@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ask Better Questions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css" />
+  <style>
+    /* ── Ticker: first span left, subsequent spans right ── */
+    .brand-headline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .brand-headline .brand-ask,
+    .brand-headline .brand-rest {
+      display: block;
+      margin-left: 0;
+    }
+    .brand-headline .brand-ask:first-child,
+    .brand-headline .brand-rest:first-child { text-align: left; }
+    .brand-headline .brand-ask:not(:first-child),
+    .brand-headline .brand-rest:not(:first-child) { text-align: right; }
+
+    /* ── Refresh button in results header ── */
+    #refresh-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      color: rgba(255,255,255,0.6);
+      font-size: 15px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    #refresh-btn:hover { border-color: #FFD700; color: #FFD700; }
+
+    /* ── Not-article detection state (shown inside warmup shell) ── */
+    #not-article {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .na-label {
+      font-family: var(--font-serif);
+      font-size: clamp(1rem, 2vw, 1.4rem);
+      font-weight: 700;
+      color: var(--slate-text);
+      margin: 0;
+    }
+    .na-hint {
+      font-size: 0.82rem;
+      color: var(--slate-muted);
+      margin: 0;
+    }
+    .na-btn {
+      align-self: flex-start;
+      background: none;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 6px;
+      color: var(--slate-text);
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .na-btn:hover { border-color: #FFD700; color: #FFD700; }
+
+    /* ── Accordion item (matches extension content.js card style) ── */
+    #items li {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .abq-item { margin: 0; }
+    .item-body {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 12px;
+    }
+    .item-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .item-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0;
+      transition: transform 0.15s;
+    }
+    .abq-item.open .item-toggle { transform: rotate(90deg); }
+    .item-label {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 4px;
+      padding: 2px 6px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .label-Words   { background: rgba(255,215,0,0.15);  color: #FFD700; }
+    .label-Proof   { background: rgba(80,200,120,0.15); color: #50C878; }
+    .label-Missing { background: rgba(255,100,80,0.15); color: #FF6450; }
+    .item-text { font-size: 13px; font-weight: 600; color: var(--fg); line-height: 1.45; flex: 1; }
+    .item-why  { display: none; font-size: 11px; color: var(--muted); line-height: 1.4; padding: 0 12px 10px; margin: 0; }
+    .abq-item.open .item-why { display: block; }
+
+    /* ── Warmup particle canvas ── */
+    .wu-canvas {
+      display: block;
+      width: 100%;
+      height: clamp(100px, 20vh, 140px);
+      opacity: 0.75;
+      pointer-events: none;
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0px,
+        black 20px,
+        black calc(100% - 20px),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        transparent 0px,
+        black 20px,
+        black calc(100% - 20px),
+        transparent 100%
+      );
+    }
+
+    @media (max-height: 520px) {
+      .wu-canvas { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Warmup overlay (shown while Render is cold-starting) ── -->
+  <div id="warmup">
+    <div class="wu-shell">
+      <div class="wu-ticker">
+        <div id="ticker-panel" class="ticker-panel"></div>
+        <div id="not-article" class="hidden"></div>
+      </div>
+      <canvas id="wu-canvas" class="wu-canvas" aria-hidden="true"></canvas>
+      <div class="wu-bar-row">
+        <span class="wu-bar-label">Loading</span>
+        <div class="wu-bar-track">
+          <div id="wu-fill" class="wu-fill"></div>
+          <div class="wu-shimmer" aria-hidden="true"></div>
+        </div>
+      </div>
+      <p id="wu-status" class="wu-status">Starting up…</p>
+    </div>
+  </div>
+
+  <!-- ── Main results (revealed when API responds) ── -->
+  <div id="main" class="hidden">
+
+    <header>
+      <span class="logo">Ask Better Questions</span>
+      <span id="status-inline" class="status-inline hidden"></span>
+      <button id="refresh-btn" title="Re-analyze this page">↻</button>
+    </header>
+
+    <div id="error" class="error hidden"></div>
+
+    <!-- Choice panel (hub / multi-story pages) -->
+    <div id="choice-panel" class="hidden">
+      <p class="choice-prompt">This page has multiple articles. Pick one:</p>
+      <ul id="candidate-list"></ul>
+    </div>
+
+    <!-- Results -->
+    <div id="results" class="hidden">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="fast"   role="tab">Questions</button>
+        <button class="tab"        data-tab="deeper" role="tab">Curious</button>
+        <button class="tab"        data-tab="cliff"  role="tab">Answers</button>
+      </div>
+      <ul id="items"></ul>
+    </div>
+
+  </div>
+
+  <script src="config.js"></script>
+  <script src="warmup-canvas.js"></script>
+  <script src="side_panel.js"></script>
+</body>
+</html>
