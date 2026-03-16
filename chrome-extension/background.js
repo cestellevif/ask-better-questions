@@ -5,7 +5,7 @@ const API_URL = "https://ask-better-questions.onrender.com/api/questions";
 
 // Health endpoints — pinged in parallel so both Render services wake up early:
 const APP_HEALTH_URL       = "https://ask-better-questions.onrender.com/api/health";
-const EXTRACTOR_HEALTH_URL = "https://ask-better-questions-extractor.fly.dev/health";
+const EXTRACTOR_HEALTH_URL = "https://ask-better-questions-vrjh.onrender.com/health";
 
 // ── Side Panel: open when toolbar button is clicked ───────────────────────
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
