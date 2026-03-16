@@ -257,42 +257,55 @@ async def fetch_html(url: str) -> str:
     }
     timeout = httpx.Timeout(12.0, connect=6.0)
 
-    async with httpx.AsyncClient(headers=headers, timeout=timeout,
-                                 follow_redirects=True) as client:
-        async with client.stream("GET", url) as r:
-            if r.status_code == 403:
-                raise HTTPException(status_code=422,
-                                    detail='This article is restricted or blocked by the website.')
-            if r.status_code == 404:
-                raise HTTPException(status_code=422,
-                                    detail='Article not found — check the URL and try again.')
-            if r.status_code == 429:
-                raise HTTPException(status_code=429,
-                                    detail='The article website is rate-limiting requests. Try again later.')
-            if r.status_code >= 400:
-                raise HTTPException(status_code=422,
-                                    detail=f'The article website returned an error ({r.status_code}).')
-            r.raise_for_status()
+    try:
+        async with httpx.AsyncClient(headers=headers, timeout=timeout,
+                                     follow_redirects=True) as client:
+            async with client.stream("GET", url) as r:
+                if r.status_code == 403:
+                    raise HTTPException(status_code=422,
+                                        detail='This article is restricted or blocked by the website.')
+                if r.status_code == 404:
+                    raise HTTPException(status_code=422,
+                                        detail='Article not found — check the URL and try again.')
+                if r.status_code == 429:
+                    raise HTTPException(status_code=429,
+                                        detail='The article website is rate-limiting requests. Try again later.')
+                if r.status_code >= 400:
+                    raise HTTPException(status_code=422,
+                                        detail=f'The article website returned an error ({r.status_code}).')
+                r.raise_for_status()
 
-            # Content-Type check (only after we have headers)
-            ctype = r.headers.get("content-type", "")
-            if ("text/html" not in ctype and
-                    "application/xhtml+xml" not in ctype):
-                raise HTTPException(status_code=415, detail=f"Unsupported \
-                                    content-type: {ctype}")
+                # Content-Type check (only after we have headers)
+                ctype = r.headers.get("content-type", "")
+                if ("text/html" not in ctype and
+                        "application/xhtml+xml" not in ctype):
+                    raise HTTPException(status_code=415, detail=f"Unsupported \
+                                        content-type: {ctype}")
 
-            chunks: List[bytes] = []
-            total = 0
+                chunks: List[bytes] = []
+                total = 0
 
-            async for chunk in r.aiter_bytes():
-                total += len(chunk)
-                if total > MAX_BYTES:
-                    raise HTTPException(status_code=413,
-                                        detail="Page too large.")
-                chunks.append(chunk)
+                async for chunk in r.aiter_bytes():
+                    total += len(chunk)
+                    if total > MAX_BYTES:
+                        raise HTTPException(status_code=413,
+                                            detail="Page too large.")
+                    chunks.append(chunk)
 
-            encoding = r.encoding or "utf-8"
-            html = b"".join(chunks).decode(encoding, errors="replace")
+                encoding = r.encoding or "utf-8"
+                html = b"".join(chunks).decode(encoding, errors="replace")
+
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=422,
+                            detail='The request timed out — the website may be slow or blocking access.')
+    except httpx.ConnectError:
+        raise HTTPException(status_code=422,
+                            detail='Could not connect to the website. It may be blocking automated access.')
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=422,
+                            detail=f'Network error fetching the article: {exc}')
 
     _cache_set(url, html)
     return html
