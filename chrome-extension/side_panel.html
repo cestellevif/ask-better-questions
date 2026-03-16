@@ -78,7 +78,9 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
+      transition: border-color 0.15s;
     }
+    #items li:hover { border-color: rgba(255,255,255,0.22); }
     .abq-item { margin: 0; }
     .item-body {
       display: flex;
@@ -104,6 +106,8 @@
       transition: transform 0.15s;
     }
     .abq-item.open .item-toggle { transform: rotate(90deg); }
+    .item-toggle:active { transform: scale(0.9); }
+    .abq-item.open .item-toggle:active { transform: rotate(90deg) scale(0.9); }
     .item-label {
       display: inline-block;
       font-size: 10px;

@@ -100,7 +100,7 @@ body {
 .brand-ask {
   font-family: var(--font-serif);
   font-style: italic;
-  font-weight: 500;
+  font-weight: 700;
   font-size: clamp(3.0rem, 6.8vw, 4.8rem);
   letter-spacing: -0.015em;
   color: var(--brand-yellow);
@@ -298,6 +298,8 @@ header {
   border-color: var(--yellow);
 }
 
+.tab:active { transform: scale(0.97); }
+
 /* ── Item cards ── */
 #items {
   list-style: none;
@@ -306,6 +308,7 @@ header {
   flex-direction: column;
   gap: 10px;
   flex: 1;
+  min-height: 240px;
 }
 
 #items li {
@@ -313,7 +316,10 @@ header {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px 14px;
+  transition: border-color 0.15s;
 }
+
+#items li:hover { border-color: rgba(255,255,255,0.22); }
 
 .item-label {
   display: inline-block;

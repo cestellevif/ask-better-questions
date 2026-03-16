@@ -132,7 +132,10 @@ async function extractFromUrl(url: string): Promise<ExtractResponse> {
 
   if (!r.ok) {
     let detail: string | undefined;
-    try { detail = ((await r.json()) as { detail?: string }).detail; } catch { await r.text(); }
+    try {
+      const text = await r.text();
+      try { detail = (JSON.parse(text) as { detail?: string }).detail; } catch { /* not JSON */ }
+    } catch { /* body unreadable */ }
     console.error("Extractor error:", r.status, detail);
     if (r.status === 429) throw new Error(detail ?? "The article fetcher is busy — please wait a moment and try again.");
     if (r.status >= 500) throw new Error("The article fetcher is temporarily unavailable. Please try again shortly.");
