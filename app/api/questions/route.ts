@@ -119,7 +119,7 @@ function isLabel(x: unknown): x is Label {
 async function extractFromUrl(url: string): Promise<ExtractResponse> {
   const extractorUrl =
     process.env.EXTRACTOR_URL ??
-    "https://ask-better-questions-vrjh.onrender.com/extract";
+    "https://ask-better-questions-extractor.fly.dev/extract";
 
   const r = await fetch(extractorUrl, {
     method: "POST",
