@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HelpTip } from "@/app/components/HelpTip";
 
 type Label = "Words" | "Proof" | "Missing";
@@ -92,6 +92,14 @@ export default function Page() {
   const [stage, setStage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [extractorReady, setExtractorReady] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/extractor-health")
+      .then(r => r.json())
+      .then((data: { ok: boolean }) => setExtractorReady(data.ok === true))
+      .catch(() => setExtractorReady(false));
+  }, []);
 
   const openUrl = chosenUrl || (inputMode === "url" ? url.trim() : "");
 
@@ -341,15 +349,20 @@ export default function Page() {
               placeholder="Paste article text here…"
             />
           ) : (
-            <input
-              className="url-input"
-              value={url}
-              onChange={(e) => {
-                setUrl(e.target.value);
-                clearCandidatesUI();
-              }}
-              placeholder="Paste a URL…"
-            />
+            <>
+              <input
+                className="url-input"
+                value={url}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  clearCandidatesUI();
+                }}
+                placeholder="Paste a URL…"
+              />
+              {extractorReady !== true && (
+                <p className="warmup-notice">Article fetcher warming up…</p>
+              )}
+            </>
           )}
 
           {/* Action row */}

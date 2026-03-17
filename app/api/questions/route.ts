@@ -116,19 +116,31 @@ function isLabel(x: unknown): x is Label {
  * @returns {Promise<ExtractResponse>} Parsed extraction result including text and any candidates.
  * @throws {Error} On 429 (rate-limited), 5xx (server error), or other non-OK HTTP status.
  */
-async function extractFromUrl(url: string): Promise<ExtractResponse> {
+async function extractFromUrl(url: string, onSlow?: () => void): Promise<ExtractResponse> {
   const extractorUrl =
     process.env.EXTRACTOR_URL ??
     "https://ask-better-questions-vrjh.onrender.com/extract";
 
-  const r = await fetch(extractorUrl, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-extractor-key": process.env.EXTRACTOR_KEY ?? ""
-    },
-    body: JSON.stringify({ url, include_candidates: true })
-  });
+  const slowWarn = onSlow ? setTimeout(onSlow, 5_000) : undefined;
+  let r: Response;
+  try {
+    r = await fetch(extractorUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-extractor-key": process.env.EXTRACTOR_KEY ?? ""
+      },
+      body: JSON.stringify({ url, include_candidates: true }),
+      signal: AbortSignal.timeout(35_000)
+    });
+  } catch (e) {
+    if (e instanceof Error && e.name === "TimeoutError") {
+      throw new Error("The article fetcher took too long to respond. Try again in a moment.");
+    }
+    throw e;
+  } finally {
+    if (slowWarn !== undefined) clearTimeout(slowWarn);
+  }
 
   if (!r.ok) {
     let detail: string | undefined;
@@ -199,7 +211,7 @@ type ResolveResult =
  * @param {Body} body - The parsed request body.
  * @returns {Promise<ResolveResult>} Discriminated union: "text" | "needs-choice" | "error".
  */
-async function resolveInput(body: Body): Promise<ResolveResult> {
+async function resolveInput(body: Body, onSlow?: () => void): Promise<ResolveResult> {
   const inputMode = body.inputMode === "url" ? "url" : "paste";
 
   if (inputMode === "paste") {
@@ -219,7 +231,7 @@ async function resolveInput(body: Body): Promise<ResolveResult> {
   }
 
   const targetUrl = chosenUrl || url;
-  const extracted = await extractFromUrl(targetUrl);
+  const extracted = await extractFromUrl(targetUrl, onSlow);
 
   if (!chosenUrl && extracted.is_multi) {
     return { kind: "needs-choice", sourceUrl: extracted.url, candidates: extracted.candidates ?? [] };
@@ -415,7 +427,10 @@ export async function POST(req: Request) {
 
         send({ type: "progress", stage: inputMode === "url" ? "Fetching page…" : "Reading text…" });
 
-        const resolved = await resolveInput(body);
+        const slowWarnFn = inputMode === "url"
+          ? () => send({ type: "progress", stage: "Waking up article fetcher — hang tight…" })
+          : undefined;
+        const resolved = await resolveInput(body, slowWarnFn);
 
         if (resolved.kind === "error") {
           send({ type: "error", error: resolved.message });

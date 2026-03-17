@@ -134,6 +134,12 @@
   min-height: 220px;
 }
 
+.warmup-notice {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, var(--vox-muted));
+  margin-top: 0.25rem;
+}
+
 /* ---------- Buttons / pills ---------- */
 
 .primary-button {
