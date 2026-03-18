@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { buildPrompt, type Mode as PromptMode } from "@/lib/prompt";
 
 export const runtime = "nodejs";
+export const maxDuration = 300; // allow Vercel to stream for up to 5 min
 
 // OpenAI client — lazy singleton so missing API key fails at request time,
 // not at module load (which would crash the dev server before any request).
@@ -106,11 +107,13 @@ function isLabel(x: unknown): x is Label {
 // URL extraction
 // -----------------------------
 
-const MAX_ATTEMPTS = 3;
-const RETRY_DELAYS_MS = [10_000, 10_000];
+const MAX_ATTEMPTS = 5;
+const RETRY_DELAYS_MS = [20_000, 20_000, 20_000, 20_000];
 const RETRY_MESSAGES = [
   "Waking up article fetcher — hang tight…",
-  "Still starting up, almost there…",
+  "Still starting up…",
+  "Taking a bit longer than usual…",
+  "Almost there…",
 ];
 
 /**

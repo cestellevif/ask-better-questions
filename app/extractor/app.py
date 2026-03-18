@@ -31,7 +31,7 @@ if not os.environ.get("EXTRACTOR_KEY"):
 MAX_BYTES = 2_000_000          # 2MB download cap
 CACHE_TTL_SECONDS = 15 * 60    # 15 minutes
 RATE_LIMIT_WINDOW = 60         # seconds
-RATE_LIMIT_MAX = 30            # requests per window per IP
+RATE_LIMIT_MAX = 60            # requests per window per IP
 
 # --- Multi-story / hub detection knobs ---
 MIN_ARTICLE_CHARS = 1600        # if extracted text is more, treat as article
