@@ -97,14 +97,14 @@ export default function Page() {
   useEffect(() => {
     let cancelled = false;
     async function pollUntilReady() {
-      for (let attempt = 0; attempt < 8; attempt++) {
+      for (let attempt = 0; attempt < 16; attempt++) {
         if (cancelled) return;
         try {
           const r = await fetch("/api/extractor-health");
           const data = await r.json() as { ok: boolean };
           if (data.ok) { if (!cancelled) setExtractorReady(true); return; }
         } catch { /* retry */ }
-        await new Promise(resolve => setTimeout(resolve, 10_000));
+        await new Promise(resolve => setTimeout(resolve, 5_000));
       }
       if (!cancelled) setExtractorReady(false); // give up after ~80 s
     }
@@ -130,7 +130,9 @@ export default function Page() {
   const canSubmit =
     !loading &&
     !overLimit &&
-    (inputMode === "paste" ? text.trim().length >= 80 : url.trim().length >= 8);
+    (inputMode === "paste"
+      ? text.trim().length >= 80
+      : url.trim().length >= 8 && extractorReady !== null);
 
   /**
    * Sends the article input to /api/questions and streams the NDJSON response.
@@ -371,7 +373,7 @@ export default function Page() {
                 placeholder="Paste a URL…"
               />
               {extractorReady === null && (
-                <p className="warmup-notice">Article fetcher warming up…</p>
+                <p className="warmup-notice">Extractor warming up…</p>
               )}
             </>
           )}
@@ -379,7 +381,11 @@ export default function Page() {
           {/* Action row */}
           <div className="action-row">
             <button className="primary-button" onClick={() => void onGenerate()} disabled={!canSubmit}>
-              {loading ? "Generating…" : "Generate"}
+              {loading
+                ? "Generating…"
+                : inputMode === "url" && extractorReady === null
+                ? "Warming up…"
+                : "Generate"}
             </button>
 
             <div className="status-slot" aria-live="polite">
