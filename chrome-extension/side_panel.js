@@ -436,6 +436,7 @@ refreshBtn.addEventListener("click", async () => {
     showError("Navigate to a web article first, then click ↻.");
     return;
   }
+  await wakeServices();
   const nonArticleType = detectNonArticle(url);
   if (nonArticleType) {
     stopTicker();

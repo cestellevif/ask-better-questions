@@ -95,10 +95,21 @@ export default function Page() {
   const [extractorReady, setExtractorReady] = useState<boolean | null>(null);
 
   useEffect(() => {
-    fetch("/api/extractor-health")
-      .then(r => r.json())
-      .then((data: { ok: boolean }) => setExtractorReady(data.ok === true))
-      .catch(() => setExtractorReady(false));
+    let cancelled = false;
+    async function pollUntilReady() {
+      for (let attempt = 0; attempt < 8; attempt++) {
+        if (cancelled) return;
+        try {
+          const r = await fetch("/api/extractor-health");
+          const data = await r.json() as { ok: boolean };
+          if (data.ok) { if (!cancelled) setExtractorReady(true); return; }
+        } catch { /* retry */ }
+        await new Promise(resolve => setTimeout(resolve, 10_000));
+      }
+      if (!cancelled) setExtractorReady(false); // give up after ~80 s
+    }
+    void pollUntilReady();
+    return () => { cancelled = true; };
   }, []);
 
   const openUrl = chosenUrl || (inputMode === "url" ? url.trim() : "");
