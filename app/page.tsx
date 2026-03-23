@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { HelpTip } from "@/app/components/HelpTip";
 
 type Label = "Words" | "Proof" | "Missing";
@@ -92,26 +92,6 @@ export default function Page() {
   const [stage, setStage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(false);
-  const [extractorReady, setExtractorReady] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function pollUntilReady() {
-      for (let attempt = 0; attempt < 16; attempt++) {
-        if (cancelled) return;
-        try {
-          const r = await fetch("/api/extractor-health");
-          const data = await r.json() as { ok: boolean };
-          if (data.ok) { if (!cancelled) setExtractorReady(true); return; }
-        } catch { /* retry */ }
-        await new Promise(resolve => setTimeout(resolve, 5_000));
-      }
-      if (!cancelled) setExtractorReady(false); // give up after ~80 s
-    }
-    void pollUntilReady();
-    return () => { cancelled = true; };
-  }, []);
-
   const openUrl = chosenUrl || (inputMode === "url" ? url.trim() : "");
 
   /**
@@ -132,7 +112,7 @@ export default function Page() {
     !overLimit &&
     (inputMode === "paste"
       ? text.trim().length >= 80
-      : url.trim().length >= 8 && extractorReady !== null);
+      : url.trim().length >= 8);
 
   /**
    * Sends the article input to /api/questions and streams the NDJSON response.
@@ -372,20 +352,14 @@ export default function Page() {
                 }}
                 placeholder="Paste a URL…"
               />
-              {extractorReady === null && (
-                <p className="warmup-notice">Extractor warming up…</p>
-              )}
+
             </>
           )}
 
           {/* Action row */}
           <div className="action-row">
             <button className="primary-button" onClick={() => void onGenerate()} disabled={!canSubmit}>
-              {loading
-                ? "Generating…"
-                : inputMode === "url" && extractorReady === null
-                ? "Warming up…"
-                : "Generate"}
+              {loading ? "Generating…" : "Generate"}
             </button>
 
             <div className="status-slot" aria-live="polite">

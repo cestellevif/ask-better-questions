@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ---------------------------------------------------------------------------
-// Hoist the OpenAI mock so it is available when the module is imported
+// Hoist mocks so they are available when modules are imported
 // ---------------------------------------------------------------------------
 const mockResponsesCreate = vi.hoisted(() => vi.fn());
+const mockExtract         = vi.hoisted(() => vi.fn());
 
 vi.mock("openai", () => ({
   // Must be a regular function (not an arrow) so `new OpenAI()` works
@@ -11,6 +12,8 @@ vi.mock("openai", () => ({
     return { responses: { create: mockResponsesCreate } };
   }),
 }));
+
+vi.mock("@/lib/extractor", () => ({ extract: mockExtract }));
 
 import { POST } from "@/app/api/questions/route";
 
@@ -112,10 +115,11 @@ const VALID_BUNDLE = {
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
-  // Default fetch stub — fails loudly if called unexpectedly
   vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Unexpected fetch call")));
   mockResponsesCreate.mockReset();
   mockResponsesCreate.mockRejectedValue(new Error("OpenAI not mocked for this test"));
+  mockExtract.mockReset();
+  mockExtract.mockRejectedValue(new Error("extract() not mocked for this test"));
 });
 
 afterEach(() => {
@@ -229,17 +233,10 @@ describe("POST /api/questions — url mode validation", () => {
   });
 
   it("streams an error when the extractor returns too little text", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        url: "https://example.com/article",
-        chosen_url: "",
-        title: "Article",
-        text: "Short.",
-        is_multi: false,
-        candidates: [],
-      }),
-    }));
+    mockExtract.mockResolvedValue({
+      url: "https://example.com/article", chosen_url: "", title: "Article",
+      text: "Short.", is_multi: false, candidates: [],
+    });
 
     const events = await readStream(
       await POST(makeRequest({ inputMode: "url", url: "https://example.com/article", mode: "bundle" }))
@@ -249,11 +246,7 @@ describe("POST /api/questions — url mode validation", () => {
   });
 
   it("streams an error when the extractor itself fails", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      text: () => Promise.resolve("Internal server error"),
-    }));
+    mockExtract.mockRejectedValue(new Error("The article fetcher is temporarily unavailable."));
 
     const events = await readStream(
       await POST(makeRequest({ inputMode: "url", url: "https://example.com/article", mode: "bundle" }))
@@ -269,20 +262,14 @@ describe("POST /api/questions — url mode validation", () => {
 
 describe("POST /api/questions — hub page (needsChoice)", () => {
   it("sends a choice event when the extractor signals is_multi=true", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        url: "https://example.com",
-        chosen_url: "",
-        title: "Example",
-        text: "",
-        is_multi: true,
-        candidates: [
-          { title: "Story 1", url: "https://example.com/1", score: 10, snippet: "A story." },
-          { title: "Story 2", url: "https://example.com/2", score: 8,  snippet: "Another." },
-        ],
-      }),
-    }));
+    mockExtract.mockResolvedValue({
+      url: "https://example.com", chosen_url: "", title: "Example", text: "",
+      is_multi: true,
+      candidates: [
+        { title: "Story 1", url: "https://example.com/1", score: 10, snippet: "A story." },
+        { title: "Story 2", url: "https://example.com/2", score: 8,  snippet: "Another." },
+      ],
+    });
 
     const events = await readStream(
       await POST(makeRequest({ inputMode: "url", url: "https://example.com", mode: "bundle" }))
@@ -296,17 +283,12 @@ describe("POST /api/questions — hub page (needsChoice)", () => {
   });
 
   it("bypasses multi-story check when chosenUrl is provided", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        url: "https://example.com/1",
-        chosen_url: "https://example.com/1",
-        title: "Story 1",
-        text: ARTICLE_TEXT,
-        is_multi: true, // extractor still says multi, but chosenUrl overrides
-        candidates: [],
-      }),
-    }));
+    mockExtract.mockResolvedValue({
+      url: "https://example.com/1", chosen_url: "https://example.com/1",
+      title: "Story 1", text: ARTICLE_TEXT,
+      is_multi: true, // extractor still says multi, but chosenUrl overrides
+      candidates: [],
+    });
     mockResponsesCreate.mockResolvedValue(makeModelResponse(JSON.stringify(VALID_BUNDLE)));
 
     const events = await readStream(
@@ -329,17 +311,10 @@ describe("POST /api/questions — hub page (needsChoice)", () => {
 
 describe("POST /api/questions — url mode successful result", () => {
   it("streams a result when the extractor returns enough text", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        url: "https://example.com/article",
-        chosen_url: "",
-        title: "Article",
-        text: ARTICLE_TEXT,
-        is_multi: false,
-        candidates: [],
-      }),
-    }));
+    mockExtract.mockResolvedValue({
+      url: "https://example.com/article", chosen_url: "", title: "Article",
+      text: ARTICLE_TEXT, is_multi: false, candidates: [],
+    });
     mockResponsesCreate.mockResolvedValue(makeModelResponse(JSON.stringify(VALID_BUNDLE)));
 
     const events = await readStream(

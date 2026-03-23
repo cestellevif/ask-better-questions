@@ -481,12 +481,8 @@ function getActiveTab() {
 async function wakeServices() {
   const slowTimer = setTimeout(() => setStage("Waking up server\u2026"), 3000);
   try {
-    await Promise.all([
-      fetch("https://ask-better-questions.onrender.com/api/health",
-            { signal: AbortSignal.timeout(60_000) }),
-      fetch("https://ask-better-questions-vrjh.onrender.com/health",
-            { signal: AbortSignal.timeout(60_000) }),
-    ]);
+    await fetch("https://ask-better-questions.onrender.com/api/health",
+                { signal: AbortSignal.timeout(60_000) });
   } catch { /* proceed — analysis will surface any real error */ }
   finally { clearTimeout(slowTimer); }
 }
