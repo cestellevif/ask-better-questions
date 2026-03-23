@@ -1,6 +1,6 @@
 import dns from "node:dns/promises";
 import { Readability } from "@mozilla/readability";
-import { JSDOM } from "jsdom";
+import { parseHTML } from "linkedom";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -145,8 +145,8 @@ export async function fetchHtml(url: string): Promise<string> {
 // ── Text extraction ──────────────────────────────────────────────────────────
 
 export function extractText(html: string, url: string): { title: string; text: string } {
-  const dom = new JSDOM(html, { url });
-  const article = new Readability(dom.window.document).parse();
+  const { document } = parseHTML(html);
+  const article = new Readability(document as unknown as Document).parse();
   return {
     title: article?.title?.trim() ?? "",
     text:  (article?.textContent ?? "").replace(/\s+/g, " ").trim(),
@@ -172,8 +172,7 @@ export function looksLikeHubText(text: string): boolean {
 // ── Story link extraction ────────────────────────────────────────────────────
 
 export function guessStoryLinks(html: string, baseUrl: string): LinkCandidate[] {
-  const dom = new JSDOM(html, { url: baseUrl });
-  const doc = dom.window.document;
+  const { document: doc } = parseHTML(html);
   const root: Element = doc.querySelector("main") ?? doc.body;
   const base = new URL(baseUrl);
   const seen = new Set<string>();

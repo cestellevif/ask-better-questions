@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // jsdom and readability use conditional native requires that webpack can't
   // resolve at build time — keep them as external Node.js packages.
-  serverExternalPackages: ["jsdom", "@mozilla/readability"],
+  serverExternalPackages: ["@mozilla/readability"],
   reactCompiler: true,
   async headers() {
     return [
