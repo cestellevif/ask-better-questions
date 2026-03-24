@@ -4,7 +4,7 @@ import { parseHTML } from "linkedom";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const MAX_BYTES        = 2_000_000;       // 2 MB download cap
+const MAX_BYTES        = 5_000_000;       // 5 MB download cap (major news sites run 3–5 MB)
 const CACHE_TTL_MS     = 15 * 60 * 1000; // 15-min HTML cache
 const MIN_ARTICLE_CHARS = 1_600;
 const SHORT_TEXT_CEILING = 800;
