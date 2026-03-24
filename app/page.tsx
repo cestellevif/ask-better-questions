@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { HelpTip } from "@/app/components/HelpTip";
 import { SplitText } from "@/app/components/SplitText";
+import { AnimatePresence, motion } from "framer-motion";
 
 type Label = "Words" | "Proof" | "Missing";
 
@@ -261,8 +262,16 @@ export default function Page() {
 </header>
 
 {/* Info box */}
-      {showInfo &&  (
-  <details className="vox-card infoCard" open>
+      <AnimatePresence>
+      {showInfo && (
+  <motion.details
+    className="vox-card infoCard"
+    open
+    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+    transition={{ duration: 0.2, ease: "easeOut" }}
+  >
     <summary className="summary infoSummary">
       <strong>A tool to stay above the text and think.</strong> 
     </summary>
@@ -299,8 +308,9 @@ export default function Page() {
         <strong>Get Better Answers</strong> is a peek under the hood, showing you what we are picking up on.
       </p>
     </div>
-  </details>
-)}
+  </motion.details>
+      )}
+      </AnimatePresence>
 
       {/* Input card */}
       <div className="input-card">
