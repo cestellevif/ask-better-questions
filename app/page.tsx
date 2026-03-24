@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { HelpTip } from "@/app/components/HelpTip";
+import { SplitText } from "@/app/components/SplitText";
 
 type Label = "Words" | "Proof" | "Missing";
 
@@ -239,7 +240,10 @@ export default function Page() {
 
       <p className="sub">
         Paste an article. Stay above it with{" "}
-        {mode === "cliff" ? "3 quick cues" : "3 easy questions"}.
+        <SplitText
+          key={mode === "cliff" ? "cues" : "questions"}
+          text={mode === "cliff" ? "3 quick cues" : "3 easy questions"}
+        />.
       </p>
     </div>
 
