@@ -212,12 +212,16 @@ export function decideIsMulti(url: string, text: string, links: LinkCandidate[])
     if (links.length >= MIN_CANDIDATES || looksLikeHubText(text)) return true;
   }
 
-  if (text.length >= MIN_ARTICLE_CHARS) return false;
-
   const topScore  = links[0]?.score ?? 0;
   const top5      = links.slice(0, 5);
   const avgTop5   = top5.length ? top5.reduce((s, l) => s + l.score, 0) / top5.length : 0;
   const strong    = links.length >= MIN_CANDIDATES && topScore >= MIN_TOP_SCORE && avgTop5 >= MIN_AVG_TOP5;
+
+  // Long text is normally a single article — unless the link signal is strong
+  // AND the extracted text itself looks like a hub listing (e.g. /politics, /world).
+  if (strong && looksLikeHubText(text)) return true;
+
+  if (text.length >= MIN_ARTICLE_CHARS) return false;
 
   return strong && (text.length <= SHORT_TEXT_CEILING || looksLikeHubText(text));
 }
@@ -237,7 +241,7 @@ export async function extract(
   const { title, text: rawText } = extractText(html, url);
 
   let links: LinkCandidate[] = [];
-  if (include_candidates && (rawText.length < MIN_ARTICLE_CHARS || looksLikeArchivePath(url))) {
+  if (include_candidates && (rawText.length < MIN_ARTICLE_CHARS || looksLikeArchivePath(url) || looksLikeHubText(rawText))) {
     links = guessStoryLinks(html, url);
   }
 
