@@ -162,6 +162,13 @@ export function looksLikeArchivePath(url: string): boolean {
   } catch { return false; }
 }
 
+function looksLikeSectionPath(url: string): boolean {
+  try {
+    const parts = new URL(url).pathname.split("/").filter(Boolean);
+    return parts.length === 1 && !/\d/.test(parts[0]) && !parts[0].includes(".");
+  } catch { return false; }
+}
+
 export function looksLikeHubText(text: string): boolean {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
   if (lines.length < 12) return false;
@@ -217,9 +224,8 @@ export function decideIsMulti(url: string, text: string, links: LinkCandidate[])
   const avgTop5   = top5.length ? top5.reduce((s, l) => s + l.score, 0) / top5.length : 0;
   const strong    = links.length >= MIN_CANDIDATES && topScore >= MIN_TOP_SCORE && avgTop5 >= MIN_AVG_TOP5;
 
-  // Long text is normally a single article — unless the link signal is strong
-  // AND the extracted text itself looks like a hub listing (e.g. /politics, /world).
-  if (strong && looksLikeHubText(text)) return true;
+  // Long text is normally a single article — except on known hub URL shapes.
+  if (strong && (looksLikeArchivePath(url) || looksLikeSectionPath(url))) return true;
 
   if (text.length >= MIN_ARTICLE_CHARS) return false;
 
@@ -241,7 +247,7 @@ export async function extract(
   const { title, text: rawText } = extractText(html, url);
 
   let links: LinkCandidate[] = [];
-  if (include_candidates && (rawText.length < MIN_ARTICLE_CHARS || looksLikeArchivePath(url) || looksLikeHubText(rawText))) {
+  if (include_candidates && (rawText.length < MIN_ARTICLE_CHARS || looksLikeArchivePath(url) || looksLikeSectionPath(url))) {
     links = guessStoryLinks(html, url);
   }
 
