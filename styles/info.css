@@ -14,9 +14,14 @@ body {
   padding: 0 16px;
 }
 
-/* Make the info card feel like a result card */
+/* Float the info card over the page — no layout shift */
 .infoCard {
-  margin-top: 14px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  z-index: 20;
 }
 
 .infoSummary {

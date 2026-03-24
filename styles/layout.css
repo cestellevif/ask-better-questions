@@ -8,6 +8,10 @@
 }
 
 /* Header block */
+.top {
+  position: relative;
+}
+
 /* Header row: title on left, info button on right */
 .topRow {
   display: flex;

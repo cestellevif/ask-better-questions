@@ -259,9 +259,8 @@ export default function Page() {
       i
     </button>
   </div>
-</header>
 
-{/* Info box */}
+  {/* Info box — floats below header, no layout shift */}
       <AnimatePresence>
       {showInfo && (
   <motion.details
@@ -311,6 +310,7 @@ export default function Page() {
   </motion.details>
       )}
       </AnimatePresence>
+</header>
 
       {/* Input card */}
       <div className="input-card">
