@@ -60,7 +60,7 @@ const PRIVATE_RANGES = [
   /^127\./,
   /^169\.254\./,
   /^::1$/,
-  /^fc[0-9a-f]{2}:/i,
+  /^f[cd][0-9a-f]{2}:/i,  // fc00::/7 ULA (fc + fd prefixes)
   /^fe[89ab][0-9a-f]:/i,
 ];
 
@@ -162,7 +162,7 @@ export function looksLikeArchivePath(url: string): boolean {
   } catch { return false; }
 }
 
-function looksLikeSectionPath(url: string): boolean {
+export function looksLikeSectionPath(url: string): boolean {
   try {
     const parts = new URL(url).pathname.split("/").filter(Boolean);
     return parts.length === 1 && !/\d/.test(parts[0]) && !parts[0].includes(".");
