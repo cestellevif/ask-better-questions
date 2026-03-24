@@ -3,5 +3,5 @@
 // For production: change to your deployed Vercel URL, e.g.
 //   https://ask-better-questions.vercel.app/api/questions
 const CONFIG = {
-  apiUrl: "https://ask-better-questions.onrender.com/api/questions",
+  apiUrl: "https://ask-better-questions-seven.vercel.app/api/questions",
 };

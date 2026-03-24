@@ -481,7 +481,7 @@ function getActiveTab() {
 async function wakeServices() {
   const slowTimer = setTimeout(() => setStage("Waking up server\u2026"), 3000);
   try {
-    await fetch("https://ask-better-questions.onrender.com/api/health",
+    await fetch("https://ask-better-questions-seven.vercel.app/api/health",
                 { signal: AbortSignal.timeout(60_000) });
   } catch { /* proceed — analysis will surface any real error */ }
   finally { clearTimeout(slowTimer); }

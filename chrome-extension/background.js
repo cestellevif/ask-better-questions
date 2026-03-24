@@ -1,11 +1,11 @@
 // background.js — Ask Better Questions Chrome Extension
 
 // Main Next.js app — must include the /api/questions path:
-const API_URL = "https://ask-better-questions.onrender.com/api/questions";
+const API_URL = "https://ask-better-questions-seven.vercel.app/api/questions";
 
 // Health endpoint — extractor is now in-process, so only one service to wake:
-const APP_HEALTH_URL       = "https://ask-better-questions.onrender.com/api/health";
-const EXTRACTOR_HEALTH_URL = "https://ask-better-questions.onrender.com/api/extractor-health";
+const APP_HEALTH_URL       = "https://ask-better-questions-seven.vercel.app/api/health";
+const EXTRACTOR_HEALTH_URL = "https://ask-better-questions-seven.vercel.app/api/extractor-health";
 
 // ── Side Panel: open when toolbar button is clicked ───────────────────────
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
