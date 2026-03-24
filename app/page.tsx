@@ -242,8 +242,8 @@ export default function Page() {
         Paste an article. Stay above it with{" "}
         <SplitText
           animKey={mode === "cliff" ? "cues" : "questions"}
-          text={mode === "cliff" ? "3 quick cues" : "3 easy questions"}
-        />.
+          text={mode === "cliff" ? "3 quick cues." : "3 easy questions."}
+        />
       </p>
     </div>
 
