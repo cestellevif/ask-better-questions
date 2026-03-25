@@ -2,6 +2,8 @@
 // Persistent side panel: fetches analysis directly, delegates highlights to content.js via background.
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
+const introEl       = document.getElementById("intro");
+const introBtn      = document.getElementById("intro-btn");
 const warmupEl      = document.getElementById("warmup");
 const wuFill        = document.getElementById("wu-fill");
 const wuStatus      = document.getElementById("wu-status");
@@ -18,7 +20,8 @@ const choicePanel     = document.getElementById("choice-panel");
 const candidateList = document.getElementById("candidate-list");
 const resultsEl     = document.getElementById("results");
 const itemsEl       = document.getElementById("items");
-const tabs          = document.querySelectorAll(".tab");
+const tabs          = document.querySelectorAll(".tab[data-tab]");
+const infoBtn       = document.getElementById("info-btn");
 
 // ── State ─────────────────────────────────────────────────────────────────
 let bundle       = null;
@@ -99,16 +102,16 @@ function hideWarmup() {
   stopTicker();
   stopBar();
   wuFill.style.width = "100%";
-  warmupEl.style.opacity = "0";
   warmupEl.style.pointerEvents = "none";
-  mainEl.classList.remove("hidden");
-  setTimeout(() => { warmupEl.style.display = "none"; }, 420);
+  mainEl.classList.remove("hidden");       // reveal content behind aurora
+  warmupEl.classList.add("reveal-up");     // slide aurora off the top
+  setTimeout(() => { warmupEl.style.display = "none"; }, 800);
 }
 
 // Restore the warmup overlay to its initial visible state.
 function showWarmup() {
+  warmupEl.classList.remove("reveal-up"); // reset before making visible
   warmupEl.style.display = "";
-  warmupEl.style.opacity = "1";
   warmupEl.style.pointerEvents = "";
   barRow.style.display = "";
   wuStatus.style.display = "";
@@ -141,7 +144,7 @@ function showError(msg) {
   errorEl.textContent = msg;
   show(errorEl);
   pasteFallbackEl.innerHTML = `
-    <p class="paste-hint">Can't access this page? Paste the article text:</p>
+    <label for="paste-input" class="paste-hint">Can't access this page? Paste the article text:</label>
     <textarea id="paste-input" rows="5" placeholder="Paste article text here…"></textarea>
     <button id="paste-submit">Analyze pasted text</button>
   `;
@@ -173,7 +176,12 @@ function reset() {
   }
   bundle     = null;
   currentTab = "fast";
-  tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === "fast"));
+  tabs.forEach(t => {
+    const isActive = t.dataset.tab === "fast";
+    t.classList.toggle("active", isActive);
+    t.setAttribute("aria-selected", isActive ? "true" : "false");
+    t.setAttribute("tabindex", isActive ? "0" : "-1");
+  });
   showWarmup();
 }
 
@@ -191,20 +199,22 @@ function renderItems(items) {
   items.forEach((item, itemIdx) => {
     const li = document.createElement("li");
     li.classList.add("abq-item");
+    const whyId = `why-${itemIdx}`;
     li.innerHTML = `
       <div class="item-body">
         <div class="item-left">
           <span class="item-label label-${item.label}">${item.label}</span>
-          <button class="item-toggle" title="Why this">›</button>
+          <button class="item-toggle" aria-expanded="false" aria-controls="${whyId}" aria-label="Show explanation">›</button>
         </div>
         <span class="item-text">${escHtml(item.text)}</span>
       </div>
-      <p class="item-why">${escHtml(item.why)}</p>
+      <p class="item-why" id="${whyId}">${escHtml(item.why)}</p>
     `;
     const bodyEl = li.querySelector(".item-body");
     bodyEl.addEventListener("click", (e) => {
       if (e.target.closest(".item-toggle")) {
-        li.classList.toggle("open");
+        const isOpen = li.classList.toggle("open");
+        li.querySelector(".item-toggle").setAttribute("aria-expanded", isOpen ? "true" : "false");
         return;
       }
       if (item.excerpt && currentTabId !== null) {
@@ -249,18 +259,34 @@ function showResults(data) {
 }
 
 // ── Tab switching ──────────────────────────────────────────────────────────
-tabs.forEach(tab => {
+const tabArray = Array.from(tabs);
+
+tabs.forEach((tab, idx) => {
   tab.addEventListener("click", () => {
     if (!bundle) return;
     const key = tab.dataset.tab;
     if (!bundle[key]) return;
     currentTab = key;
-    tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === key));
+    tabs.forEach(t => {
+      const isActive = t.dataset.tab === key;
+      t.classList.toggle("active", isActive);
+      t.setAttribute("aria-selected", isActive ? "true" : "false");
+      t.setAttribute("tabindex", isActive ? "0" : "-1");
+    });
     renderItems(bundle[key]);
     // Re-apply highlights for the new tab's excerpts
     const excerpts = bundle[key].map(it => it.excerpt ?? null);
     if (currentTabId !== null) {
       chrome.runtime.sendMessage({ type: "apply-highlights", tabId: currentTabId, excerpts }).catch(() => {});
+    }
+  });
+
+  tab.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      const next = tabArray[(idx + (e.key === "ArrowRight" ? 1 : -1) + tabArray.length) % tabArray.length];
+      next.focus();
+      next.click();
     }
   });
 });
@@ -488,7 +514,8 @@ async function wakeServices() {
 }
 
 // ── Entry point ────────────────────────────────────────────────────────────
-(async () => {
+
+async function startApp() {
   startTicker();
   startBar();
 
@@ -510,4 +537,51 @@ async function wakeServices() {
   } else {
     await runAnalysis(url, null);
   }
+}
+
+infoBtn.addEventListener("click", () => {
+  if (introEl.classList.contains("hidden")) {
+    show(introEl);
+    infoBtn.classList.add("active");
+    setTimeout(() => introBtn.focus(), 50);
+  } else {
+    hide(introEl);
+    infoBtn.classList.remove("active");
+    infoBtn.focus();
+  }
+});
+
+// Escape closes the info-triggered intro overlay (not first-run)
+introEl.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !mainEl.classList.contains("hidden")) {
+    hide(introEl);
+    infoBtn.classList.remove("active");
+    infoBtn.focus();
+  }
+});
+
+introBtn.addEventListener("click", async () => {
+  if (mainEl.classList.contains("hidden")) {
+    // First run: start the app
+    await chrome.storage.local.set({ hasSeenIntro: true });
+    hide(introEl);
+    warmupEl.style.display = "";
+    await startApp();
+  } else {
+    // Re-opened via info button: just close
+    hide(introEl);
+    infoBtn.classList.remove("active");
+    infoBtn.focus();
+  }
+});
+
+(async () => {
+  const { hasSeenIntro } = await chrome.storage.local.get("hasSeenIntro");
+  if (!hasSeenIntro) {
+    warmupEl.style.display = "none";
+    show(introEl);
+    setTimeout(() => introBtn.focus(), 50);
+    return;
+  }
+  await startApp();
 })();

@@ -15,7 +15,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["activeTab", "scripting", "sidePanel"],
+  "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
   "side_panel": { "default_path": "side_panel.html" },
   "host_permissions": [
     "https://*/*",

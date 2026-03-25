@@ -86,27 +86,39 @@
       display: flex;
       align-items: flex-start;
       gap: 8px;
-      padding: 10px 12px;
+      padding: 6px 12px 10px;
     }
     .item-left {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 1px;
       flex-shrink: 0;
     }
     .item-toggle {
       background: none;
       border: none;
-      color: var(--muted);
       cursor: pointer;
-      font-size: 16px;
+      font-size: 24px;
       line-height: 1;
       padding: 0;
-      transition: transform 0.15s;
+      transition: transform 0.2s ease-out, text-shadow 0.15s;
     }
-    .abq-item.open .item-toggle { transform: rotate(90deg); }
-    .item-toggle:active { transform: scale(0.9); }
+    /* Arrow inherits the label colour */
+    .label-Words  ~ .item-toggle { color: #FFD700; }
+    .label-Proof  ~ .item-toggle { color: #50C878; }
+    .label-Missing ~ .item-toggle { color: #FF6450; }
+    /* Glow on card hover using the label colour */
+    #items li:hover .item-toggle { text-shadow: 0 0 10px currentColor; }
+    /* Rotate when hovering the toggle itself */
+    .item-toggle:hover { transform: rotate(90deg); }
+    /* Open state */
+    .abq-item.open .item-toggle {
+      transform: rotate(90deg);
+      color: var(--yellow);
+      text-shadow: 0 0 8px rgba(255,215,0,0.4);
+    }
+    .item-toggle:active { transform: rotate(90deg) scale(0.9); }
     .abq-item.open .item-toggle:active { transform: rotate(90deg) scale(0.9); }
     .item-label {
       display: inline-block;
@@ -125,6 +137,59 @@
     .item-text { font-size: 13px; font-weight: 600; color: var(--fg); line-height: 1.45; flex: 1; }
     .item-why  { display: none; font-size: 11px; color: var(--muted); line-height: 1.4; padding: 0 12px 10px; margin: 0; }
     .abq-item.open .item-why { display: block; }
+
+    /* ── Focus-visible rings (keyboard nav) ── */
+    .item-toggle:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
+    .tab:focus-visible,
+    #refresh-btn:focus-visible,
+    .na-btn:focus-visible,
+    #paste-submit:focus-visible {
+      outline: 2px solid var(--yellow);
+      outline-offset: 2px;
+    }
+
+    /* ── First-run intro ── */
+    #intro {
+      position: absolute;
+      inset: 0;
+      background: var(--slate-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 32px 28px;
+      z-index: 100;
+    }
+    #intro.hidden { display: none; }
+    .intro-body {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .intro-tagline {
+      font-size: 13px;
+      color: var(--slate-muted);
+      margin: 0;
+    }
+    .intro-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 0;
+      margin: 0;
+    }
+    .intro-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--slate-muted);
+    }
 
     /* ── Paste fallback ── */
     #paste-fallback {
@@ -165,12 +230,30 @@
 </head>
 <body>
 
+  <!-- ── First-run intro (one-time, hidden after 'Got it') ── -->
+  <div id="intro" class="hidden">
+    <div class="intro-body">
+      <h1 class="brand-headline">
+        <span class="brand-ask">Ask</span>
+        <span class="brand-rest">Better Questions</span>
+      </h1>
+      <p class="intro-tagline">Three lenses for every article:</p>
+      <ul class="intro-list">
+        <li><strong class="item-label label-Words">Words</strong> how labels and phrasing shape meaning</li>
+        <li><strong class="item-label label-Proof">Proof</strong> what the text shows, checks, or assumes</li>
+        <li><strong class="item-label label-Missing">Missing</strong> what standards or context go unstated</li>
+      </ul>
+      <button id="intro-btn" class="na-btn">Got it →</button>
+    </div>
+  </div>
+
   <!-- ── Warmup overlay (shown while Render is cold-starting) ── -->
   <div id="warmup">
+    <div id="aurora-layer" aria-hidden="true"></div>
     <div class="wu-shell">
       <div class="wu-ticker">
         <div id="ticker-panel" class="ticker-panel"></div>
-        <div id="not-article" class="hidden"></div>
+        <div id="not-article" class="hidden" aria-live="polite"></div>
       </div>
       <div class="wu-bar-row">
         <span class="wu-bar-label">Loading</span>
@@ -179,7 +262,7 @@
           <div class="wu-shimmer" aria-hidden="true"></div>
         </div>
       </div>
-      <p id="wu-status" class="wu-status">Starting up…</p>
+      <p id="wu-status" class="wu-status" role="status" aria-live="polite">Starting up…</p>
     </div>
   </div>
 
@@ -187,28 +270,31 @@
   <div id="main" class="hidden">
 
     <header>
-      <span class="logo">Ask Better Questions</span>
-      <span id="status-inline" class="status-inline hidden"></span>
-      <button id="refresh-btn" title="Re-analyze this page">↻</button>
+      <span class="logo">Ask Better<br>Questions</span>
+      <span id="status-inline" class="status-inline hidden" role="status" aria-live="polite"></span>
+      <button id="refresh-btn" aria-label="Re-analyze this page" title="Re-analyze this page">↻</button>
     </header>
 
-    <div id="error" class="error hidden"></div>
+    <div id="error" class="error hidden" role="alert"></div>
 
     <!-- Paste fallback (shown after URL extraction errors) -->
     <div id="paste-fallback" class="hidden"></div>
 
     <!-- Choice panel (hub / multi-story pages) -->
     <div id="choice-panel" class="hidden">
-      <p class="choice-prompt">This page has multiple articles. Pick one:</p>
-      <ul id="candidate-list"></ul>
+      <p class="choice-prompt" id="choice-legend">This page has multiple articles. Pick one:</p>
+      <ul id="candidate-list" aria-labelledby="choice-legend"></ul>
     </div>
 
     <!-- Results -->
     <div id="results" class="hidden">
-      <div class="tabs" role="tablist">
-        <button class="tab active" data-tab="fast"   role="tab">Questions</button>
-        <button class="tab"        data-tab="deeper" role="tab">Curious</button>
-        <button class="tab"        data-tab="cliff"  role="tab">Answers</button>
+      <div class="tabs-row">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="fast"   role="tab" aria-selected="true"  tabindex="0">Questions</button>
+          <button class="tab"        data-tab="deeper" role="tab" aria-selected="false" tabindex="-1">Curious</button>
+          <button class="tab"        data-tab="cliff"  role="tab" aria-selected="false" tabindex="-1">Answers</button>
+        </div>
+        <button id="info-btn" class="tab info-tab" aria-label="About" title="About">ⓘ</button>
       </div>
       <ul id="items"></ul>
     </div>
