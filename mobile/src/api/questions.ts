@@ -1,8 +1,8 @@
 import type { AnalysisResult } from '../types/api';
 
-const API_URL = 'https://ask-better-questions.onrender.com/api/questions';
-const APP_HEALTH_URL = 'https://ask-better-questions.onrender.com/api/health';
-const EXTRACTOR_HEALTH_URL = 'https://ask-better-questions-vrjh.onrender.com/health';
+const API_URL = 'https://ask-better-questions-seven.vercel.app/api/questions';
+const APP_HEALTH_URL = 'https://ask-better-questions-seven.vercel.app/api/health';
+const EXTRACTOR_HEALTH_URL = 'https://ask-better-questions-seven.vercel.app/api/extractor-health';
 
 export type ProgressCallback = (stage: string) => void;
 
@@ -74,6 +74,9 @@ export async function analyzeUrl(
           type: 'result',
           bundle: event.data.bundle,
           meter: event.data.meter,
+          articleText: typeof event.data.articleText === 'string'
+            ? event.data.articleText
+            : undefined,
         };
       } else if (event.type === 'choice') {
         result = {

@@ -388,7 +388,7 @@ export async function POST(req: Request) {
             ? normalizeBundle(parsed)
             : normalizeSingle(parsed, mode);
 
-        send({ type: "result", data: out });
+        send({ type: "result", data: { ...out, articleText: resolved.text } });
       } catch (err: unknown) {
         console.error("POST /api/questions failed:", err);
         const message = err instanceof Error ? err.message : "Unknown error";

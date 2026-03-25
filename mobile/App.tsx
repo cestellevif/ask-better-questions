@@ -1,16 +1,62 @@
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
 import {StatusBar} from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, createNavigationContainerRef} from '@react-navigation/native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import ShareMenuReactView from 'react-native-share-menu';
 import {RootNavigator} from './src/navigation/RootNavigator';
+import type {RootStackParamList} from './src/navigation/RootNavigator';
+
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
+
+function isHttpUrl(s?: string): s is string {
+  return !!s && /^https?:\/\//.test(s);
+}
 
 export default function App() {
+  // Holds a URL from getInitialShare() that arrived before navigation was ready
+  const pendingUrlRef = useRef<string | null>(null);
+
+  // Cold launch: app opened via share sheet from a closed state
+  useEffect(() => {
+    ShareMenuReactView.getInitialShare()
+      .then((share: {data?: string} | null) => {
+        const url = share?.data;
+        if (!isHttpUrl(url)) return;
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('Analysis', {url});
+        } else {
+          pendingUrlRef.current = url;
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Warm launch: share while app is already open
+  useEffect(() => {
+    const listener = ShareMenuReactView.addNewShareListener(
+      ({data}: {data?: string}) => {
+        if (isHttpUrl(data)) {
+          navigationRef.navigate('Analysis', {url: data});
+        }
+      },
+    );
+    return () => listener.remove();
+  }, []);
+
+  function handleNavigationReady() {
+    const url = pendingUrlRef.current;
+    if (url) {
+      pendingUrlRef.current = null;
+      navigationRef.navigate('Analysis', {url});
+    }
+  }
+
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" backgroundColor="#0f0f10" />
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef} onReady={handleNavigationReady}>
           <RootNavigator />
         </NavigationContainer>
       </SafeAreaProvider>

@@ -28,11 +28,12 @@ interface Props {
 }
 
 export function WarmupScreen({stage}: Props) {
-  const [slideIdx, setSlideIdx] = useState(0);
+  const [slideIdx, setSlideIdx] = useState(
+    () => Math.floor(Math.random() * SLIDES.length),
+  );
   const opacity = useRef(new Animated.Value(1)).current;
-  const barWidth = useRef(new Animated.Value(0)).current;
 
-  // Ticker: fade out → swap slide → fade in
+  // Ticker: fade out → swap slide (random, never consecutive) → fade in
   useEffect(() => {
     const advance = () => {
       Animated.timing(opacity, {
@@ -40,7 +41,11 @@ export function WarmupScreen({stage}: Props) {
         duration: 200,
         useNativeDriver: true,
       }).start(() => {
-        setSlideIdx(i => (i + 1) % SLIDES.length);
+        setSlideIdx(i => {
+          let next = Math.floor(Math.random() * SLIDES.length);
+          while (next === i) next = Math.floor(Math.random() * SLIDES.length);
+          return next;
+        });
         Animated.timing(opacity, {
           toValue: 1,
           duration: 500,
@@ -57,38 +62,12 @@ export function WarmupScreen({stage}: Props) {
     };
   }, [opacity]);
 
-  // Progress bar crawls 0 → 90% over ~12 ticks
-  useEffect(() => {
-    let pct = 0;
-    const tick = setInterval(() => {
-      pct = Math.min(90, pct + 5);
-      Animated.timing(barWidth, {
-        toValue: pct,
-        duration: 420,
-        useNativeDriver: false,
-      }).start();
-    }, 700);
-    return () => clearInterval(tick);
-  }, [barWidth]);
-
-  const barWidthPct = barWidth.interpolate({
-    inputRange: [0, 100],
-    outputRange: ['0%', '100%'],
-  });
-
   return (
     <View style={styles.container}>
       <View style={styles.shell}>
         <Animated.Text style={[styles.slide, {opacity}]}>
           {SLIDES[slideIdx]}
         </Animated.Text>
-
-        <View style={styles.barRow}>
-          <Text style={styles.barLabel}>Loading</Text>
-          <View style={styles.barTrack}>
-            <Animated.View style={[styles.barFill, {width: barWidthPct}]} />
-          </View>
-        </View>
 
         <Text style={styles.statusText}>{stage}</Text>
       </View>
@@ -114,32 +93,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 28,
     lineHeight: 36,
-  },
-  barRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  barLabel: {
-    color: tokens.slateText,
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  barTrack: {
-    flex: 1,
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.16)',
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: 999,
-    backgroundColor: tokens.yellow,
-    opacity: 0.82,
   },
   statusText: {
     color: tokens.slateMuted,

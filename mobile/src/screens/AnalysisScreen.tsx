@@ -1,6 +1,5 @@
 import React, {useEffect} from 'react';
 import {View} from 'react-native';
-import ShareMenuReactView from 'react-native-share-menu';
 import {CandidateList} from '../components/CandidateList';
 import {ErrorBanner} from '../components/ErrorBanner';
 import {WarmupScreen} from '../components/WarmupScreen';
@@ -29,36 +28,13 @@ export function AnalysisScreen({route, navigation}: Props) {
     }
   }, [phase.kind, navigation]);
 
+  // Re-run whenever the URL param changes (navigated here + share while open)
   useEffect(() => {
     if (urlFromNav) {
-      // Navigated here from the URL input — run directly, skip share menu
       run(urlFromNav);
-    } else {
-      // Cold launch from share sheet: read the URL the OS delivered
-      ShareMenuReactView.getInitialShare()
-        .then((share: {data?: string} | null) => {
-          const url = share?.data;
-          if (url && /^https?:\/\//.test(url)) {
-            run(url);
-          }
-        })
-        .catch(() => {
-          // No initial share — opened directly, nothing to do
-        });
     }
-
-    // Foreground / background share while the app is already open
-    const listener = ShareMenuReactView.addNewShareListener(
-      ({data}: {data?: string}) => {
-        if (data && /^https?:\/\//.test(data)) {
-          run(data);
-        }
-      },
-    );
-
-    return () => listener.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [urlFromNav]);
 
   if (phase.kind === 'warmup' || phase.kind === 'loading') {
     return <WarmupScreen stage={phase.stage} />;
@@ -74,14 +50,14 @@ export function AnalysisScreen({route, navigation}: Props) {
   }
 
   if (phase.kind === 'result') {
-    return <ResultsScreen bundle={phase.bundle} meter={phase.meter} />;
+    return <ResultsScreen bundle={phase.bundle} meter={phase.meter} articleText={phase.articleText} />;
   }
 
   if (phase.kind === 'error') {
     return (
       <ErrorBanner
         message={phase.message}
-        onRetry={urlFromNav ? () => run(urlFromNav) : undefined}
+        onRetry={() => navigation.goBack()}
       />
     );
   }

@@ -7,7 +7,7 @@ export type Phase =
   | {kind: 'warmup'; stage: string}
   | {kind: 'loading'; stage: string}
   | {kind: 'choice'; candidates: ExtractCandidate[]; sourceUrl: string}
-  | {kind: 'result'; bundle: Bundle; meter?: Meter}
+  | {kind: 'result'; bundle: Bundle; meter?: Meter; articleText?: string}
   | {kind: 'error'; message: string};
 
 export function useAnalysis() {
@@ -53,7 +53,7 @@ export function useAnalysis() {
       clearTimeout(wakeTimer);
 
       if (result.type === 'result') {
-        setPhase({kind: 'result', bundle: result.bundle, meter: result.meter});
+        setPhase({kind: 'result', bundle: result.bundle, meter: result.meter, articleText: result.articleText});
       } else if (result.type === 'choice') {
         setPhase({
           kind: 'choice',

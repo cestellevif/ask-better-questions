@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import {
   Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -17,15 +19,21 @@ export function HomeScreen({navigation}: Props) {
   const [url, setUrl] = useState('');
 
   const handleAnalyze = () => {
-    const trimmed = url.trim();
+    let trimmed = url.trim();
     if (!trimmed) {
       return;
+    }
+    if (!/^https?:\/\//i.test(trimmed)) {
+      trimmed = 'https://' + trimmed;
     }
     Keyboard.dismiss();
     navigation.navigate('Analysis', {url: trimmed});
   };
 
   return (
+    <KeyboardAvoidingView
+      style={styles.kavWrapper}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <View style={styles.container}>
       <Text style={styles.subtitle}>
         Paste an article URL to analyze it, or share one from your browser.
@@ -51,10 +59,15 @@ export function HomeScreen({navigation}: Props) {
         <Text style={styles.btnText}>Analyze</Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  kavWrapper: {
+    flex: 1,
+    backgroundColor: tokens.bg,
+  },
   container: {
     flex: 1,
     backgroundColor: tokens.bg,

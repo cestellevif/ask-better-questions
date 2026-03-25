@@ -4,6 +4,7 @@ export type Item = {
   label: Label;
   text: string;
   why: string;
+  excerpt?: string;
 };
 
 export type Meter = {
@@ -27,6 +28,6 @@ export type Bundle = {
 };
 
 export type AnalysisResult =
-  | { type: 'result'; bundle: Bundle; meter?: Meter }
+  | { type: 'result'; bundle: Bundle; meter?: Meter; articleText?: string }
   | { type: 'choice'; sourceUrl: string; candidates: ExtractCandidate[] }
   | { type: 'error'; error: string };
