@@ -1,5 +1,5 @@
-import React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useEffect} from 'react';
+import {AccessibilityInfo, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {tokens} from '../theme/tokens';
 
 interface Props {
@@ -8,11 +8,23 @@ interface Props {
 }
 
 export function ErrorBanner({message, onRetry}: Props) {
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(`Error: ${message}`);
+  }, [message]);
+
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessibilityRole="alert"
+      accessibilityLiveRegion="assertive">
       <Text style={styles.message}>{message}</Text>
       {onRetry && (
-        <TouchableOpacity style={styles.btn} onPress={onRetry}>
+        <TouchableOpacity
+          style={styles.btn}
+          onPress={onRetry}
+          accessibilityRole="button"
+          accessibilityLabel="Try again"
+          accessibilityHint="Retry the previous analysis">
           <Text style={styles.btnText}>Try again</Text>
         </TouchableOpacity>
       )}
