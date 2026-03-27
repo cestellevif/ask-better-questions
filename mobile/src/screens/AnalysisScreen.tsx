@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {View} from 'react-native';
+import {AccessibilityInfo, View} from 'react-native';
 import {CandidateList} from '../components/CandidateList';
 import {ErrorBanner} from '../components/ErrorBanner';
 import {WarmupScreen} from '../components/WarmupScreen';
@@ -15,16 +15,27 @@ export function AnalysisScreen({route, navigation}: Props) {
   const urlFromNav = route.params?.url;
   const {phase, run} = useAnalysis();
 
-  // Update header title to reflect current phase
+  // Update header title and announce phase transitions to screen readers
   useEffect(() => {
+    let title = 'Analyzing…';
+    let announcement = '';
+
     if (phase.kind === 'result') {
-      navigation.setOptions({title: 'Results'});
+      title = 'Results';
+      announcement = 'Analysis complete. Results are ready.';
     } else if (phase.kind === 'choice') {
-      navigation.setOptions({title: 'Choose article'});
+      title = 'Choose article';
+      announcement = 'Multiple articles found. Please choose one.';
     } else if (phase.kind === 'error') {
-      navigation.setOptions({title: 'Error'});
-    } else {
-      navigation.setOptions({title: 'Analyzing…'});
+      title = 'Error';
+      // ErrorBanner announces its own message — no duplicate here
+    } else if (phase.kind === 'loading') {
+      announcement = phase.stage;
+    }
+
+    navigation.setOptions({title});
+    if (announcement) {
+      AccessibilityInfo.announceForAccessibility(announcement);
     }
   }, [phase.kind, navigation]);
 
