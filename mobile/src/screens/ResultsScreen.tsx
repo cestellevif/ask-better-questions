@@ -31,12 +31,13 @@ interface Props {
 
 type Segment = {text: string; highlight: boolean};
 
-function buildSegments(text: string, excerpts: string[]): Segment[] {
+export function buildSegments(text: string, excerpts: string[]): Segment[] {
   const ranges: {start: number; end: number}[] = [];
 
   for (const raw of excerpts) {
     if (!raw) continue;
     const needle = raw.trim();
+    if (!needle) continue;
     let idx = text.indexOf(needle);
     if (idx === -1) {
       const collapsed = text.replace(/\s+/g, ' ');
