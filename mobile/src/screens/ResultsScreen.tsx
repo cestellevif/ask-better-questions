@@ -75,6 +75,7 @@ function buildSegments(text: string, excerpts: string[]): Segment[] {
 export function ResultsScreen({bundle, articleText}: Props) {
   const [activeTab, setActiveTab] = useState<keyof Bundle>('fast');
   const [cardWidth, setCardWidth] = useState(0);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const listRef = useRef<FlatList<CardData>>(null);
   const articleScrollRef = useRef<ScrollView>(null);
   const paragraphYRef = useRef<Record<number, number>>({});
@@ -114,7 +115,13 @@ export function ResultsScreen({bundle, articleText}: Props) {
 
   function handleTabPress(key: keyof Bundle) {
     setActiveTab(key);
+    setCurrentCardIndex(0);
     listRef.current?.scrollToOffset({offset: 0, animated: false});
+  }
+
+  function handleScrollEnd(event: {nativeEvent: {contentOffset: {x: number}}}) {
+    const index = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
+    setCurrentCardIndex(index);
   }
 
   return (
@@ -123,7 +130,8 @@ export function ResultsScreen({bundle, articleText}: Props) {
       <ScrollView
         ref={articleScrollRef}
         style={[styles.articleScroll, isDark ? styles.articleDark : styles.articleLight]}
-        contentContainerStyle={styles.articleContent}>
+        contentContainerStyle={styles.articleContent}
+        accessibilityLabel="Article content">
         {paragraphs.length > 0 ? (
           paragraphs.map((para, idx) => (
             <View
@@ -134,7 +142,10 @@ export function ResultsScreen({bundle, articleText}: Props) {
               <Text style={isDark ? styles.articleTextDark : styles.articleTextLight}>
                 {buildSegments(para, excerpts).map((seg, i) =>
                   seg.highlight ? (
-                    <Text key={i} style={isDark ? styles.highlightDark : styles.highlightLight}>
+                    <Text
+                      key={i}
+                      style={isDark ? styles.highlightDark : styles.highlightLight}
+                      accessibilityLabel={`Highlighted: ${seg.text}`}>
                       {seg.text}
                     </Text>
                   ) : (
@@ -145,18 +156,23 @@ export function ResultsScreen({bundle, articleText}: Props) {
             </View>
           ))
         ) : (
-          <Text style={styles.noArticle}>Article text unavailable.</Text>
+          <Text style={styles.noArticle} accessibilityRole="alert">
+            Article text unavailable.
+          </Text>
         )}
       </ScrollView>
 
       {/* Bottom deck — fixed height */}
       <View style={styles.deck}>
-        <View style={styles.tabBar}>
+        <View style={styles.tabBar} accessibilityRole="tablist">
           {TABS.map(tab => (
             <TouchableOpacity
               key={tab.key}
               style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => handleTabPress(tab.key)}>
+              onPress={() => handleTabPress(tab.key)}
+              accessibilityRole="tab"
+              accessibilityLabel={tab.label}
+              accessibilityState={{selected: activeTab === tab.key}}>
               <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
                 {tab.label}
               </Text>
@@ -175,16 +191,22 @@ export function ResultsScreen({bundle, articleText}: Props) {
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               keyExtractor={(_, i) => `${activeTab}-${i}`}
-              renderItem={({item}) =>
+              onMomentumScrollEnd={handleScrollEnd}
+              accessibilityLabel={`${cards.length} cards`}
+              renderItem={({item, index}) =>
                 item.kind === 'item' ? (
-                  <View style={[styles.cardSlide, {width: cardWidth}]}>
+                  <View
+                    style={[styles.cardSlide, {width: cardWidth}]}
+                    accessibilityLabel={`Card ${index + 1} of ${cards.length}`}>
                     <ItemCard
                       item={item.item}
                       onExpand={() => scrollToExcerpt(item.item.excerpt)}
                     />
                   </View>
                 ) : (
-                  <View style={[styles.cardSlide, {width: cardWidth}]}>
+                  <View
+                    style={[styles.cardSlide, {width: cardWidth}]}
+                    accessibilityLabel={`Card ${index + 1} of ${cards.length}`}>
                     <ChallengeCard tab={item.tab} />
                   </View>
                 )
@@ -207,8 +229,8 @@ const styles = StyleSheet.create({
   articleTextLight: {color: '#1a1a1a', fontSize: 15, lineHeight: 24, marginBottom: 12},
   articleTextDark: {color: tokens.fg, fontSize: 15, lineHeight: 24, marginBottom: 12},
   noArticle: {color: tokens.muted, fontSize: 13},
-  highlightLight: {backgroundColor: 'rgba(255,215,0,0.35)', color: '#1a1a1a'},
-  highlightDark: {backgroundColor: 'rgba(255,215,0,0.25)', color: tokens.fg},
+  highlightLight: {backgroundColor: 'rgba(255,215,0,0.50)', color: '#1a1a1a'},
+  highlightDark: {backgroundColor: 'rgba(255,215,0,0.35)', color: tokens.fg},
 
   // Fixed-height bottom deck
   deck: {
