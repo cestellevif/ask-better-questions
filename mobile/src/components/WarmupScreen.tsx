@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet, Text, View} from 'react-native';
 import {tokens} from '../theme/tokens';
+import {useReducedMotion} from '../hooks/useReducedMotion';
 
 // Same slides as the Chrome extension and webapp warmup
 const SLIDES = [
@@ -32,9 +33,12 @@ export function WarmupScreen({stage}: Props) {
     () => Math.floor(Math.random() * SLIDES.length),
   );
   const opacity = useRef(new Animated.Value(1)).current;
+  const reduceMotion = useReducedMotion();
 
   // Ticker: fade out → swap slide (random, never consecutive) → fade in
   useEffect(() => {
+    if (reduceMotion) return; // Keep the first slide static; no flashing
+
     const advance = () => {
       Animated.timing(opacity, {
         toValue: 0,
@@ -60,16 +64,21 @@ export function WarmupScreen({stage}: Props) {
       clearTimeout(initial);
       clearInterval(interval);
     };
-  }, [opacity]);
+  }, [opacity, reduceMotion]);
 
   return (
     <View style={styles.container}>
       <View style={styles.shell}>
-        <Animated.Text style={[styles.slide, {opacity}]}>
+        <Animated.Text
+          style={[styles.slide, {opacity}]}
+          accessible={false}
+          importantForAccessibility="no-hide-descendants">
           {SLIDES[slideIdx]}
         </Animated.Text>
 
-        <Text style={styles.statusText}>{stage}</Text>
+        <Text style={styles.statusText} accessibilityLiveRegion="polite">
+          {stage}
+        </Text>
       </View>
     </View>
   );
