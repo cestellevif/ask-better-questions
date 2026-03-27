@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {useReducedMotion} from '../hooks/useReducedMotion';
 import {tokens} from '../theme/tokens';
 import type {Item} from '../types/api';
 
@@ -23,6 +24,7 @@ interface Props {
 export function ItemCard({item, onExpand}: Props) {
   const [expanded, setExpanded] = useState(false);
   const colors = LABEL_COLORS[item.label] ?? LABEL_COLORS.Words;
+  const reduceMotion = useReducedMotion();
   const rotation = useRef(new Animated.Value(0)).current;
   const whyAnim = useRef(new Animated.Value(0)).current;
 
@@ -40,6 +42,9 @@ export function ItemCard({item, onExpand}: Props) {
   function toggle() {
     const next = !expanded;
     setExpanded(next);
+
+    if (reduceMotion) return;
+
     Animated.spring(rotation, {
       toValue: next ? 1 : 0,
       useNativeDriver: true,
@@ -65,12 +70,22 @@ export function ItemCard({item, onExpand}: Props) {
   }
 
   return (
-    <TouchableOpacity style={styles.card} onPress={toggle} activeOpacity={0.85}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={toggle}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.label}: ${item.text}`}
+      accessibilityHint={expanded ? 'Collapse to hide explanation' : 'Expand to read why'}
+      accessibilityState={{expanded}}>
       <View style={styles.header}>
         <View style={[styles.badge, {backgroundColor: colors.bg}]}>
           <Text style={[styles.badgeText, {color: colors.text}]}>{item.label}</Text>
         </View>
-        <Animated.Text style={[styles.icon, {color: colors.text, transform: [{rotate: iconRotate}]}]}>
+        <Animated.Text
+          style={[styles.icon, {color: colors.text, transform: [{rotate: iconRotate}]}]}
+          accessible={false}
+          importantForAccessibility="no-hide-descendants">
           +
         </Animated.Text>
       </View>
