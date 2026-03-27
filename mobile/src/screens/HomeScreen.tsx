@@ -50,12 +50,18 @@ export function HomeScreen({navigation}: Props) {
         keyboardType="url"
         returnKeyType="go"
         onSubmitEditing={handleAnalyze}
+        accessibilityLabel="Article URL"
+        accessibilityHint="Paste or type the full URL of an article, then tap Analyze"
       />
 
       <TouchableOpacity
         style={[styles.btn, !url.trim() && styles.btnDisabled]}
         onPress={handleAnalyze}
-        disabled={!url.trim()}>
+        disabled={!url.trim()}
+        accessibilityRole="button"
+        accessibilityLabel="Analyze"
+        accessibilityHint={url.trim() ? 'Analyzes the article at the entered URL' : 'Enter a URL first'}
+        accessibilityState={{disabled: !url.trim()}}>
         <Text style={styles.btnText}>Analyze</Text>
       </TouchableOpacity>
     </View>
