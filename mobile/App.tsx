@@ -37,9 +37,9 @@ export default function App() {
   // Warm launch: share while app is already open
   useEffect(() => {
     const listener = ShareMenuReactView.addNewShareListener(
-      ({data}: {data?: string}) => {
-        if (isHttpUrl(data)) {
-          navigationRef.navigate('Analysis', {url: data});
+      (share: {data?: string} | null) => {
+        if (isHttpUrl(share?.data)) {
+          navigationRef.navigate('Analysis', {url: share.data});
         }
       },
     );
