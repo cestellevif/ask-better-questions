@@ -45,8 +45,11 @@ export function ChallengeCard({tab}: {tab: keyof Bundle}) {
   );
   const text = CHALLENGES[tab][idx];
   return (
-    <View style={styles.card}>
-      <Text style={styles.label}>Your move</Text>
+    <View
+      style={styles.card}
+      accessible={true}
+      accessibilityLabel={`Your move: ${text}`}>
+      <Text style={styles.label} accessibilityRole="header">Your move</Text>
       <Text style={styles.text}>{text}</Text>
     </View>
   );
