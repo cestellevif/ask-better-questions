@@ -28,33 +28,43 @@ interface Props {
   stage: string;
 }
 
+// How far off-screen the slide travels (in points)
+const SLIDE_OFFSET = 48;
+
 export function WarmupScreen({stage}: Props) {
   const [slideIdx, setSlideIdx] = useState(
     () => Math.floor(Math.random() * SLIDES.length),
   );
   const opacity = useRef(new Animated.Value(1)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
   const reduceMotion = useReducedMotion();
 
-  // Ticker: fade out → swap slide (random, never consecutive) → fade in
+  // Ticker: roll + fade left → swap → enter from right
   useEffect(() => {
-    if (reduceMotion) return; // Keep the first slide static; no flashing
+    if (reduceMotion) return;
 
     const advance = () => {
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => {
+      // Exit: roll left and fade out
+      Animated.parallel([
+        Animated.timing(opacity, {toValue: 0, duration: 220, useNativeDriver: true}),
+        Animated.timing(translateX, {toValue: -SLIDE_OFFSET, duration: 220, useNativeDriver: true}),
+      ]).start(() => {
         setSlideIdx(i => {
           let next = Math.floor(Math.random() * SLIDES.length);
           while (next === i) next = Math.floor(Math.random() * SLIDES.length);
           return next;
         });
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }).start();
+        // Reset to right, then spring into place while fading in
+        translateX.setValue(SLIDE_OFFSET);
+        Animated.parallel([
+          Animated.timing(opacity, {toValue: 1, duration: 340, useNativeDriver: true}),
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            damping: 18,
+            stiffness: 160,
+          }),
+        ]).start();
       });
     };
 
@@ -64,13 +74,13 @@ export function WarmupScreen({stage}: Props) {
       clearTimeout(initial);
       clearInterval(interval);
     };
-  }, [opacity, reduceMotion]);
+  }, [opacity, translateX, reduceMotion]);
 
   return (
     <View style={styles.container}>
       <View style={styles.shell}>
         <Animated.Text
-          style={[styles.slide, {opacity}]}
+          style={[styles.slide, {opacity, transform: [{translateX}]}]}
           accessible={false}
           importantForAccessibility="no-hide-descendants">
           {SLIDES[slideIdx]}
@@ -87,7 +97,7 @@ export function WarmupScreen({stage}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tokens.slateBg,
+    backgroundColor: tokens.bg,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -97,14 +107,14 @@ const styles = StyleSheet.create({
     maxWidth: 600,
   },
   slide: {
-    color: tokens.slateText,
+    color: tokens.fg,
     fontSize: 28,
     fontWeight: '700',
     marginBottom: 28,
     lineHeight: 36,
   },
   statusText: {
-    color: tokens.slateMuted,
+    color: tokens.muted,
     fontSize: 11,
   },
 });

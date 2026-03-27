@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
 
   // Fixed-height bottom deck
   deck: {
-    height: 155,
+    height: 209,
     borderTopWidth: 1,
     borderTopColor: tokens.border,
     paddingTop: 8,
