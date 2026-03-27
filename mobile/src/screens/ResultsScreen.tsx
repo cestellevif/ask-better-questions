@@ -142,10 +142,7 @@ export function ResultsScreen({bundle, articleText}: Props) {
               <Text style={isDark ? styles.articleTextDark : styles.articleTextLight}>
                 {buildSegments(para, excerpts).map((seg, i) =>
                   seg.highlight ? (
-                    <Text
-                      key={i}
-                      style={isDark ? styles.highlightDark : styles.highlightLight}
-                      accessibilityLabel={`Highlighted: ${seg.text}`}>
+                    <Text key={i} style={isDark ? styles.highlightDark : styles.highlightLight}>
                       {seg.text}
                     </Text>
                   ) : (

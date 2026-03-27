@@ -1,5 +1,5 @@
-import React, {useEffect} from 'react';
-import {AccessibilityInfo, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React from 'react';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {tokens} from '../theme/tokens';
 
 interface Props {
@@ -8,10 +8,6 @@ interface Props {
 }
 
 export function ErrorBanner({message, onRetry}: Props) {
-  useEffect(() => {
-    AccessibilityInfo.announceForAccessibility(`Error: ${message}`);
-  }, [message]);
-
   return (
     <View
       style={styles.container}

@@ -31,13 +31,15 @@ export function AnalysisScreen({route, navigation}: Props) {
       // ErrorBanner announces its own message — no duplicate here
     } else if (phase.kind === 'loading') {
       announcement = phase.stage;
+    } else if (phase.kind === 'warmup') {
+      announcement = phase.stage;
     }
 
     navigation.setOptions({title});
     if (announcement) {
       AccessibilityInfo.announceForAccessibility(announcement);
     }
-  }, [phase.kind, navigation]);
+  }, [phase.kind, (phase.kind === 'loading' || phase.kind === 'warmup') ? phase.stage : undefined, navigation]);
 
   // Re-run whenever the URL param changes (navigated here + share while open)
   useEffect(() => {
