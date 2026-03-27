@@ -7,8 +7,8 @@ export const tokens = {
   bg: '#0f0f10',
   fg: '#f2f2f2',
   card: '#17181a',
-  border: 'rgba(255,255,255,0.12)',
-  muted: 'rgba(255,255,255,0.60)',
+  border: 'rgba(255,255,255,0.28)',
+  muted: 'rgba(255,255,255,0.68)',
 
   // Slate (warmup screen)
   slateBg: '#1f2933',
