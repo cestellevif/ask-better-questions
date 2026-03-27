@@ -11,16 +11,20 @@ interface Props {
 export function CandidateList({candidates, onPick}: Props) {
   return (
     <View style={styles.container}>
-      <Text style={styles.prompt}>
+      <Text style={styles.prompt} accessibilityRole="header">
         This page has multiple articles. Pick one:
       </Text>
       <FlatList
         data={candidates}
         keyExtractor={item => item.url}
-        renderItem={({item}) => (
+        accessibilityLabel={`${candidates.length} articles to choose from`}
+        renderItem={({item, index}) => (
           <TouchableOpacity
             style={styles.item}
-            onPress={() => onPick(item.url)}>
+            onPress={() => onPick(item.url)}
+            accessibilityRole="button"
+            accessibilityLabel={`Article ${index + 1} of ${candidates.length}: ${item.title || item.url}`}
+            accessibilityHint="Double-tap to analyze this article">
             <Text style={styles.title} numberOfLines={2}>
               {item.title || item.url}
             </Text>
