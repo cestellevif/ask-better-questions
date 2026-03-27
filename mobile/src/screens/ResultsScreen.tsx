@@ -37,9 +37,7 @@ function buildSegments(text: string, excerpts: string[]): Segment[] {
   for (const raw of excerpts) {
     if (!raw) continue;
     const needle = raw.trim();
-    // Pass 1: exact match
     let idx = text.indexOf(needle);
-    // Pass 2: whitespace-collapsed
     if (idx === -1) {
       const collapsed = text.replace(/\s+/g, ' ');
       const needleCollapsed = needle.replace(/\s+/g, ' ');
@@ -78,6 +76,8 @@ export function ResultsScreen({bundle, articleText}: Props) {
   const [activeTab, setActiveTab] = useState<keyof Bundle>('fast');
   const [cardWidth, setCardWidth] = useState(0);
   const listRef = useRef<FlatList<CardData>>(null);
+  const articleScrollRef = useRef<ScrollView>(null);
+  const paragraphYRef = useRef<Record<number, number>>({});
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -90,7 +90,27 @@ export function ResultsScreen({bundle, articleText}: Props) {
     .map(item => item.excerpt)
     .filter((e): e is string => !!e);
 
-  const segments = articleText ? buildSegments(articleText, excerpts) : [];
+  const paragraphs = articleText
+    ? articleText.split(/\n+/).filter(p => p.trim())
+    : [];
+
+  function scrollToExcerpt(excerpt: string | undefined) {
+    if (!excerpt || !articleText) return;
+    const needle = excerpt.trim();
+    const needleCollapsed = needle.replace(/\s+/g, ' ');
+
+    for (let i = 0; i < paragraphs.length; i++) {
+      const para = paragraphs[i];
+      if (para.includes(needle) || para.replace(/\s+/g, ' ').includes(needleCollapsed)) {
+        const y = paragraphYRef.current[i];
+        if (y !== undefined) {
+          // Scroll with a small offset so the paragraph isn't flush against the top
+          articleScrollRef.current?.scrollTo({y: Math.max(0, y - 12), animated: true});
+        }
+        return;
+      }
+    }
+  }
 
   function handleTabPress(key: keyof Bundle) {
     setActiveTab(key);
@@ -99,48 +119,51 @@ export function ResultsScreen({bundle, articleText}: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Article area — 3/4 height */}
+      {/* Article — fills remaining space above the deck */}
       <ScrollView
+        ref={articleScrollRef}
         style={[styles.articleScroll, isDark ? styles.articleDark : styles.articleLight]}
         contentContainerStyle={styles.articleContent}>
-        {articleText ? (
-          <Text style={isDark ? styles.articleTextDark : styles.articleTextLight}>
-            {segments.map((seg, i) =>
-              seg.highlight ? (
-                <Text key={i} style={isDark ? styles.highlightDark : styles.highlightLight}>
-                  {seg.text}
-                </Text>
-              ) : (
-                <Text key={i}>{seg.text}</Text>
-              ),
-            )}
-          </Text>
+        {paragraphs.length > 0 ? (
+          paragraphs.map((para, idx) => (
+            <View
+              key={idx}
+              onLayout={e => {
+                paragraphYRef.current[idx] = e.nativeEvent.layout.y;
+              }}>
+              <Text style={isDark ? styles.articleTextDark : styles.articleTextLight}>
+                {buildSegments(para, excerpts).map((seg, i) =>
+                  seg.highlight ? (
+                    <Text key={i} style={isDark ? styles.highlightDark : styles.highlightLight}>
+                      {seg.text}
+                    </Text>
+                  ) : (
+                    <Text key={i}>{seg.text}</Text>
+                  ),
+                )}
+              </Text>
+            </View>
+          ))
         ) : (
           <Text style={styles.noArticle}>Article text unavailable.</Text>
         )}
       </ScrollView>
 
-      {/* Bottom deck — 1/4 height */}
+      {/* Bottom deck — fixed height */}
       <View style={styles.deck}>
-        {/* Mode tabs */}
         <View style={styles.tabBar}>
           {TABS.map(tab => (
             <TouchableOpacity
               key={tab.key}
               style={[styles.tab, activeTab === tab.key && styles.tabActive]}
               onPress={() => handleTabPress(tab.key)}>
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab.key && styles.tabTextActive,
-                ]}>
+              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Swipeable cards */}
         <View
           style={styles.cardArea}
           onLayout={e => setCardWidth(e.nativeEvent.layout.width)}>
@@ -155,7 +178,10 @@ export function ResultsScreen({bundle, articleText}: Props) {
               renderItem={({item}) =>
                 item.kind === 'item' ? (
                   <View style={[styles.cardSlide, {width: cardWidth}]}>
-                    <ItemCard item={item.item} />
+                    <ItemCard
+                      item={item.item}
+                      onExpand={() => scrollToExcerpt(item.item.excerpt)}
+                    />
                   </View>
                 ) : (
                   <View style={[styles.cardSlide, {width: cardWidth}]}>
@@ -174,20 +200,19 @@ export function ResultsScreen({bundle, articleText}: Props) {
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: tokens.bg},
 
-  // Article — 3/4
-  articleScroll: {flex: 3},
+  articleScroll: {flex: 1},
   articleLight: {backgroundColor: '#ffffff'},
   articleDark: {backgroundColor: tokens.bg},
   articleContent: {padding: 16, paddingBottom: 24},
-  articleTextLight: {color: '#1a1a1a', fontSize: 15, lineHeight: 24},
-  articleTextDark: {color: tokens.fg, fontSize: 15, lineHeight: 24},
+  articleTextLight: {color: '#1a1a1a', fontSize: 15, lineHeight: 24, marginBottom: 12},
+  articleTextDark: {color: tokens.fg, fontSize: 15, lineHeight: 24, marginBottom: 12},
   noArticle: {color: tokens.muted, fontSize: 13},
   highlightLight: {backgroundColor: 'rgba(255,215,0,0.35)', color: '#1a1a1a'},
   highlightDark: {backgroundColor: 'rgba(255,215,0,0.25)', color: tokens.fg},
 
-  // Bottom deck — 1/4
+  // Fixed-height bottom deck
   deck: {
-    flex: 1,
+    height: 155,
     borderTopWidth: 1,
     borderTopColor: tokens.border,
     paddingTop: 8,
@@ -196,17 +221,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 6,
     paddingHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   tab: {
     borderWidth: 1,
     borderColor: tokens.border,
     borderRadius: tokens.radiusCard,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
   },
   tabActive: {borderColor: tokens.yellow},
-  tabText: {color: tokens.muted, fontSize: 12},
+  tabText: {color: tokens.muted, fontSize: 11},
   tabTextActive: {color: tokens.yellow},
 
   cardArea: {flex: 1},

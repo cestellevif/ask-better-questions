@@ -1,5 +1,11 @@
-import React, {useState} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useRef, useState} from 'react';
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {tokens} from '../theme/tokens';
 import type {Item} from '../types/api';
 
@@ -9,22 +15,75 @@ const LABEL_COLORS: Record<string, {bg: string; text: string}> = {
   Missing: {bg: 'rgba(255,100,80,0.15)', text: '#FF6450'},
 };
 
-export function ItemCard({item}: {item: Item}) {
+interface Props {
+  item: Item;
+  onExpand?: () => void;
+}
+
+export function ItemCard({item, onExpand}: Props) {
   const [expanded, setExpanded] = useState(false);
   const colors = LABEL_COLORS[item.label] ?? LABEL_COLORS.Words;
+  const rotation = useRef(new Animated.Value(0)).current;
+  const whyAnim = useRef(new Animated.Value(0)).current;
+
+  const iconRotate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '45deg'],
+  });
+
+  const whyOpacity = whyAnim;
+  const whyTranslateY = whyAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [6, 0],
+  });
+
+  function toggle() {
+    const next = !expanded;
+    setExpanded(next);
+    Animated.spring(rotation, {
+      toValue: next ? 1 : 0,
+      useNativeDriver: true,
+      damping: 12,
+      stiffness: 160,
+    }).start();
+    if (next) {
+      whyAnim.setValue(0);
+      Animated.spring(whyAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        damping: 14,
+        stiffness: 180,
+      }).start();
+      onExpand?.();
+    } else {
+      Animated.timing(whyAnim, {
+        toValue: 0,
+        duration: 120,
+        useNativeDriver: true,
+      }).start();
+    }
+  }
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => setExpanded(e => !e)}
-      activeOpacity={0.85}>
-      <View style={[styles.badge, {backgroundColor: colors.bg}]}>
-        <Text style={[styles.badgeText, {color: colors.text}]}>
-          {item.label}
-        </Text>
+    <TouchableOpacity style={styles.card} onPress={toggle} activeOpacity={0.85}>
+      <View style={styles.header}>
+        <View style={[styles.badge, {backgroundColor: colors.bg}]}>
+          <Text style={[styles.badgeText, {color: colors.text}]}>{item.label}</Text>
+        </View>
+        <Animated.Text style={[styles.icon, {color: colors.text, transform: [{rotate: iconRotate}]}]}>
+          +
+        </Animated.Text>
       </View>
       <Text style={styles.question}>{item.text}</Text>
-      {expanded && <Text style={styles.why}>{item.why}</Text>}
+      {expanded && (
+        <Animated.Text
+          style={[
+            styles.why,
+            {opacity: whyOpacity, transform: [{translateY: whyTranslateY}]},
+          ]}>
+          {item.why}
+        </Animated.Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -38,18 +97,27 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 8,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
   badge: {
-    alignSelf: 'flex-start',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    marginBottom: 6,
   },
   badgeText: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
+  },
+  icon: {
+    fontSize: 18,
+    fontWeight: '300',
+    lineHeight: 20,
   },
   question: {
     color: tokens.fg,

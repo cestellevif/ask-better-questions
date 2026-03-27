@@ -147,10 +147,21 @@ export async function fetchHtml(url: string): Promise<string> {
 export function extractText(html: string, url: string): { title: string; text: string } {
   const { document } = parseHTML(html);
   const article = new Readability(document as unknown as Document).parse();
-  return {
-    title: article?.title?.trim() ?? "",
-    text:  (article?.textContent ?? "").replace(/\s+/g, " ").trim(),
-  };
+  const title = article?.title?.trim() ?? "";
+
+  // Use Readability's HTML output to extract per-paragraph text, preserving breaks.
+  // Falling back to flat textContent if no <p> tags are found.
+  if (article?.content) {
+    const { document: articleDoc } = parseHTML(article.content);
+    const paras = Array.from(articleDoc.querySelectorAll("p"))
+      .map(p => (p.textContent ?? "").replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+    if (paras.length > 0) {
+      return { title, text: paras.join("\n\n") };
+    }
+  }
+
+  return { title, text: (article?.textContent ?? "").replace(/\s+/g, " ").trim() };
 }
 
 // ── Hub detection helpers ────────────────────────────────────────────────────

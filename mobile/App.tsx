@@ -17,19 +17,21 @@ export default function App() {
   // Holds a URL from getInitialShare() that arrived before navigation was ready
   const pendingUrlRef = useRef<string | null>(null);
 
-  // Cold launch: app opened via share sheet from a closed state
+  // Cold launch: app opened via share sheet from a closed state.
+  // getInitialShare() returns undefined on a normal open (no share intent),
+  // so we guard before calling .then().
   useEffect(() => {
-    ShareMenuReactView.getInitialShare()
-      .then((share: {data?: string} | null) => {
-        const url = share?.data;
-        if (!isHttpUrl(url)) return;
-        if (navigationRef.isReady()) {
-          navigationRef.navigate('Analysis', {url});
-        } else {
-          pendingUrlRef.current = url;
-        }
-      })
-      .catch(() => {});
+    const p = ShareMenuReactView.getInitialShare();
+    if (!p) return;
+    p.then((share: {data?: string} | null) => {
+      const url = share?.data;
+      if (!isHttpUrl(url)) return;
+      if (navigationRef.isReady()) {
+        navigationRef.navigate('Analysis', {url});
+      } else {
+        pendingUrlRef.current = url;
+      }
+    }).catch(() => {});
   }, []);
 
   // Warm launch: share while app is already open
