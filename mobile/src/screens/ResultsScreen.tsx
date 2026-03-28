@@ -8,8 +8,10 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import {ChallengeCard} from '../components/ChallengeCard';
 import {ItemCard} from '../components/ItemCard';
+import {useRollTransition} from '../hooks/useRollTransition';
 import {tokens} from '../theme/tokens';
 import type {Bundle, Item, Meter} from '../types/api';
 
@@ -75,6 +77,8 @@ export function buildSegments(text: string, excerpts: string[]): Segment[] {
 
 export function ResultsScreen({bundle, articleText}: Props) {
   const [activeTab, setActiveTab] = useState<keyof Bundle>('fast');
+  const [displayedTab, setDisplayedTab] = useState<keyof Bundle>('fast');
+  const {rollOut, style: deckStyle} = useRollTransition();
   const [cardWidth, setCardWidth] = useState(0);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const listRef = useRef<FlatList<CardData>>(null);
@@ -84,11 +88,11 @@ export function ResultsScreen({bundle, articleText}: Props) {
   const isDark = colorScheme === 'dark';
 
   const cards: CardData[] = [
-    ...bundle[activeTab].map(item => ({kind: 'item' as const, item})),
-    {kind: 'challenge' as const, tab: activeTab},
+    ...bundle[displayedTab].map(item => ({kind: 'item' as const, item})),
+    {kind: 'challenge' as const, tab: displayedTab},
   ];
 
-  const excerpts = bundle[activeTab]
+  const excerpts = bundle[displayedTab]
     .map(item => item.excerpt)
     .filter((e): e is string => !!e);
 
@@ -115,9 +119,13 @@ export function ResultsScreen({bundle, articleText}: Props) {
   }
 
   function handleTabPress(key: keyof Bundle) {
-    setActiveTab(key);
-    setCurrentCardIndex(0);
-    listRef.current?.scrollToOffset({offset: 0, animated: false});
+    setActiveTab(key); // Tab bar indicator updates immediately
+    if (key === displayedTab) return;
+    rollOut(() => {
+      setDisplayedTab(key);
+      setCurrentCardIndex(0);
+      listRef.current?.scrollToOffset({offset: 0, animated: false});
+    });
   }
 
   function handleScrollEnd(event: {nativeEvent: {contentOffset: {x: number}}}) {
@@ -178,8 +186,8 @@ export function ResultsScreen({bundle, articleText}: Props) {
           ))}
         </View>
 
-        <View
-          style={styles.cardArea}
+        <Animated.View
+          style={[styles.cardArea, deckStyle]}
           onLayout={e => setCardWidth(e.nativeEvent.layout.width)}>
           {cardWidth > 0 && (
             <FlatList
@@ -211,7 +219,7 @@ export function ResultsScreen({bundle, articleText}: Props) {
               }
             />
           )}
-        </View>
+        </Animated.View>
       </View>
     </View>
   );
