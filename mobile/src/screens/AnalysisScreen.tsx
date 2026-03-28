@@ -1,21 +1,75 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {AccessibilityInfo, View} from 'react-native';
+import Animated from 'react-native-reanimated';
 import {CandidateList} from '../components/CandidateList';
 import {ErrorBanner} from '../components/ErrorBanner';
 import {WarmupScreen} from '../components/WarmupScreen';
 import {useAnalysis} from '../hooks/useAnalysis';
+import {useRollTransition} from '../hooks/useRollTransition';
 import {tokens} from '../theme/tokens';
 import {ResultsScreen} from './ResultsScreen';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/RootNavigator';
+import type {Phase} from '../hooks/useAnalysis';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Analysis'>;
+type RunFn = ReturnType<typeof useAnalysis>['run'];
+type NavProp = Props['navigation'];
+
+function renderPhase(p: Phase, run: RunFn, navigation: NavProp) {
+  if (p.kind === 'warmup' || p.kind === 'loading') {
+    return <WarmupScreen stage={p.stage} />;
+  }
+  if (p.kind === 'choice') {
+    return (
+      <CandidateList
+        candidates={p.candidates}
+        onPick={url => run(p.sourceUrl, url)}
+      />
+    );
+  }
+  if (p.kind === 'result') {
+    return (
+      <ResultsScreen
+        bundle={p.bundle}
+        meter={p.meter}
+        articleText={p.articleText}
+      />
+    );
+  }
+  if (p.kind === 'error') {
+    return (
+      <ErrorBanner
+        message={p.message}
+        onRetry={() => navigation.goBack()}
+      />
+    );
+  }
+  return <View style={{flex: 1, backgroundColor: tokens.bg}} />;
+}
 
 export function AnalysisScreen({route, navigation}: Props) {
   const urlFromNav = route.params?.url;
   const {phase, run} = useAnalysis();
 
-  // Update header title and announce phase transitions to screen readers
+  const [displayedPhase, setDisplayedPhase] = useState<Phase>(phase);
+  const lastKindRef = useRef<Phase['kind']>(phase.kind);
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+
+  const {rollOut, style} = useRollTransition();
+
+  // Animate on kind changes; sync immediately for same-kind updates (e.g. stage text)
+  useEffect(() => {
+    if (phase.kind === lastKindRef.current) {
+      setDisplayedPhase(phase);
+      return;
+    }
+    lastKindRef.current = phase.kind;
+    rollOut(() => setDisplayedPhase(phaseRef.current));
+  }, [phase, rollOut]);
+
+  // Accessibility announcements — use real-time `phase` (not displayedPhase)
   useEffect(() => {
     let title = 'Analyzing…';
     let announcement = '';
@@ -28,7 +82,6 @@ export function AnalysisScreen({route, navigation}: Props) {
       announcement = 'Multiple articles found. Please choose one.';
     } else if (phase.kind === 'error') {
       title = 'Error';
-      // ErrorBanner announces its own message — no duplicate here
     } else if (phase.kind === 'loading') {
       announcement = phase.stage;
     } else if (phase.kind === 'warmup') {
@@ -39,9 +92,15 @@ export function AnalysisScreen({route, navigation}: Props) {
     if (announcement) {
       AccessibilityInfo.announceForAccessibility(announcement);
     }
-  }, [phase.kind, (phase.kind === 'loading' || phase.kind === 'warmup') ? phase.stage : undefined, navigation]);
+  }, [
+    phase.kind,
+    (phase.kind === 'loading' || phase.kind === 'warmup')
+      ? phase.stage
+      : undefined,
+    navigation,
+  ]);
 
-  // Re-run whenever the URL param changes (navigated here + share while open)
+  // Re-run whenever the URL param changes
   useEffect(() => {
     if (urlFromNav) {
       run(urlFromNav);
@@ -49,32 +108,9 @@ export function AnalysisScreen({route, navigation}: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlFromNav]);
 
-  if (phase.kind === 'warmup' || phase.kind === 'loading') {
-    return <WarmupScreen stage={phase.stage} />;
-  }
-
-  if (phase.kind === 'choice') {
-    return (
-      <CandidateList
-        candidates={phase.candidates}
-        onPick={chosenUrl => run(phase.sourceUrl, chosenUrl)}
-      />
-    );
-  }
-
-  if (phase.kind === 'result') {
-    return <ResultsScreen bundle={phase.bundle} meter={phase.meter} articleText={phase.articleText} />;
-  }
-
-  if (phase.kind === 'error') {
-    return (
-      <ErrorBanner
-        message={phase.message}
-        onRetry={() => navigation.goBack()}
-      />
-    );
-  }
-
-  // idle — nothing shown yet
-  return <View style={{flex: 1, backgroundColor: tokens.bg}} />;
+  return (
+    <Animated.View style={[{flex: 1, backgroundColor: tokens.bg}, style]}>
+      {renderPhase(displayedPhase, run, navigation)}
+    </Animated.View>
+  );
 }
