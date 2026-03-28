@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import Animated from 'react-native-reanimated';
 import {StyleSheet, Text, View} from 'react-native';
 import {tokens} from '../theme/tokens';
