@@ -71,6 +71,9 @@ export function CandidateList({candidates, onPick}: Props) {
   const reduceMotion = useReducedMotion();
   const [exiting, setExiting] = useState(false);
   const chosenUrlRef = useRef<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   function handlePick(url: string) {
     if (exiting) return;
@@ -82,7 +85,7 @@ export function CandidateList({candidates, onPick}: Props) {
     setExiting(true);
     // Wait for all items to finish exiting before triggering phase change
     const duration = (candidates.length - 1) * 45 + 200 + 20;
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       if (chosenUrlRef.current) onPick(chosenUrlRef.current);
     }, duration);
   }
