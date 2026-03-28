@@ -1,9 +1,9 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Animated, StyleSheet, Text, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import Animated from 'react-native-reanimated';
+import {StyleSheet, Text, View} from 'react-native';
 import {tokens} from '../theme/tokens';
-import {useReducedMotion} from '../hooks/useReducedMotion';
+import {useRollTransition} from '../hooks/useRollTransition';
 
-// Same slides as the Chrome extension and webapp warmup
 const SLIDES = [
   'Ask Better Questions',
   'Read with Intent',
@@ -28,43 +28,20 @@ interface Props {
   stage: string;
 }
 
-// How far off-screen the slide travels (in points)
-const SLIDE_OFFSET = 48;
-
 export function WarmupScreen({stage}: Props) {
   const [slideIdx, setSlideIdx] = useState(
     () => Math.floor(Math.random() * SLIDES.length),
   );
-  const opacity = useRef(new Animated.Value(1)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const reduceMotion = useReducedMotion();
+  const {rollOut, style} = useRollTransition();
 
-  // Ticker: roll + fade left → swap → enter from right
   useEffect(() => {
-    if (reduceMotion) return;
-
     const advance = () => {
-      // Exit: roll left and fade out
-      Animated.parallel([
-        Animated.timing(opacity, {toValue: 0, duration: 220, useNativeDriver: true}),
-        Animated.timing(translateX, {toValue: -SLIDE_OFFSET, duration: 220, useNativeDriver: true}),
-      ]).start(() => {
+      rollOut(() => {
         setSlideIdx(i => {
           let next = Math.floor(Math.random() * SLIDES.length);
           while (next === i) next = Math.floor(Math.random() * SLIDES.length);
           return next;
         });
-        // Reset to right, then spring into place while fading in
-        translateX.setValue(SLIDE_OFFSET);
-        Animated.parallel([
-          Animated.timing(opacity, {toValue: 1, duration: 340, useNativeDriver: true}),
-          Animated.spring(translateX, {
-            toValue: 0,
-            useNativeDriver: true,
-            damping: 18,
-            stiffness: 160,
-          }),
-        ]).start();
       });
     };
 
@@ -74,13 +51,13 @@ export function WarmupScreen({stage}: Props) {
       clearTimeout(initial);
       clearInterval(interval);
     };
-  }, [opacity, translateX, reduceMotion]);
+  }, [rollOut]);
 
   return (
     <View style={styles.container}>
       <View style={styles.shell}>
         <Animated.Text
-          style={[styles.slide, {opacity, transform: [{translateX}]}]}
+          style={[styles.slide, style]}
           accessible={false}
           importantForAccessibility="no-hide-descendants">
           {SLIDES[slideIdx]}
