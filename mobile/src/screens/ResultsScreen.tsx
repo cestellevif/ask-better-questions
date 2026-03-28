@@ -196,7 +196,7 @@ export function ResultsScreen({bundle, articleText}: Props) {
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
-              keyExtractor={(_, i) => `${activeTab}-${i}`}
+              keyExtractor={(_, i) => `${displayedTab}-${i}`}
               onMomentumScrollEnd={handleScrollEnd}
               accessibilityLabel={`${cards.length} cards`}
               renderItem={({item, index}) =>
