@@ -1,0 +1,22 @@
+diff --git a/android/src/main/java/com/meedan/ShareMenuModule.java b/android/src/main/java/com/meedan/ShareMenuModule.java
+index 1234567..abcdefg 100644
+--- a/android/src/main/java/com/meedan/ShareMenuModule.java
++++ b/android/src/main/java/com/meedan/ShareMenuModule.java
+@@ -99,12 +99,12 @@ public class ShareMenuModule extends ReactContextBaseJavaModule {
+
+       ReadableMap shared = extractShared(newIntent);
+-      successCallback.invoke(shared);
++      if (successCallback != null) successCallback.invoke(shared);
+       clearSharedText();
+       currentActivity.finish();
+       return;
+     }
+
+     Intent intent = currentActivity.getIntent();
+-
++
+     ReadableMap shared = extractShared(intent);
+-    successCallback.invoke(shared);
++    if (successCallback != null) successCallback.invoke(shared);
+     clearSharedText();
+   }
