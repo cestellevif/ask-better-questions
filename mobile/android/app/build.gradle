@@ -84,6 +84,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        ndk {
+            // Physical devices are arm64-v8a; skip x86_64 to avoid slow Windows CMake build
+            abiFilters "arm64-v8a"
+        }
     }
     signingConfigs {
         debug {
