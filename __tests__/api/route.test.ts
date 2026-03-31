@@ -3,13 +3,26 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // ---------------------------------------------------------------------------
 // Hoist mocks so they are available when modules are imported
 // ---------------------------------------------------------------------------
-const mockResponsesCreate = vi.hoisted(() => vi.fn());
-const mockExtract         = vi.hoisted(() => vi.fn());
+const mockResponsesCreate  = vi.hoisted(() => vi.fn());
+const mockModerationsCreate = vi.hoisted(() => vi.fn());
+const mockExtract           = vi.hoisted(() => vi.fn());
+
+// Default moderation response: clean
+const CLEAN_MODERATION = {
+  results: [{
+    flagged: false,
+    categories: { hate: false, "sexual/minors": false, violence: false, harassment: false, "hate/threatening": false, "violence/graphic": false },
+    category_scores: { hate: 0, "sexual/minors": 0, violence: 0, harassment: 0, "hate/threatening": 0, "violence/graphic": 0 },
+  }],
+};
 
 vi.mock("openai", () => ({
   // Must be a regular function (not an arrow) so `new OpenAI()` works
   default: vi.fn(function MockOpenAI() {
-    return { responses: { create: mockResponsesCreate } };
+    return {
+      responses: { create: mockResponsesCreate },
+      moderations: { create: mockModerationsCreate },
+    };
   }),
 }));
 
@@ -118,6 +131,8 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Unexpected fetch call")));
   mockResponsesCreate.mockReset();
   mockResponsesCreate.mockRejectedValue(new Error("OpenAI not mocked for this test"));
+  mockModerationsCreate.mockReset();
+  mockModerationsCreate.mockResolvedValue(CLEAN_MODERATION);
   mockExtract.mockReset();
   mockExtract.mockRejectedValue(new Error("extract() not mocked for this test"));
 });
@@ -469,6 +484,60 @@ describe("POST /api/questions — excerpt field passthrough", () => {
 // ---------------------------------------------------------------------------
 // OpenAI failure handling
 // ---------------------------------------------------------------------------
+
+describe("POST /api/questions — content moderation", () => {
+  it("streams an error when the moderation API hard-rejects hate content", async () => {
+    mockModerationsCreate.mockResolvedValue({
+      results: [{
+        flagged: true,
+        categories: { hate: true, "sexual/minors": false, violence: false, harassment: false, "hate/threatening": false, "violence/graphic": false },
+        category_scores: { hate: 0.99, "sexual/minors": 0, violence: 0, harassment: 0, "hate/threatening": 0, "violence/graphic": 0 },
+      }],
+    });
+
+    const events = await readStream(
+      await POST(makeRequest({ inputMode: "paste", text: ARTICLE_TEXT, mode: "bundle" }))
+    );
+
+    expect(events).toContainEqual(expect.objectContaining({ type: "error" }));
+    // Model should not have been called
+    expect(mockResponsesCreate).not.toHaveBeenCalled();
+  });
+
+  it("streams an error when violence score exceeds the soft threshold", async () => {
+    mockModerationsCreate.mockResolvedValue({
+      results: [{
+        flagged: false,
+        categories: { hate: false, "sexual/minors": false, violence: false, harassment: false, "hate/threatening": false, "violence/graphic": false },
+        category_scores: { hate: 0, "sexual/minors": 0, violence: 0.95, harassment: 0, "hate/threatening": 0, "violence/graphic": 0 },
+      }],
+    });
+
+    const events = await readStream(
+      await POST(makeRequest({ inputMode: "paste", text: ARTICLE_TEXT, mode: "bundle" }))
+    );
+
+    expect(events).toContainEqual(expect.objectContaining({ type: "error" }));
+    expect(mockResponsesCreate).not.toHaveBeenCalled();
+  });
+
+  it("proceeds normally when violence score is below the soft threshold", async () => {
+    mockModerationsCreate.mockResolvedValue({
+      results: [{
+        flagged: false,
+        categories: { hate: false, "sexual/minors": false, violence: false, harassment: false, "hate/threatening": false, "violence/graphic": false },
+        category_scores: { hate: 0, "sexual/minors": 0, violence: 0.60, harassment: 0, "hate/threatening": 0, "violence/graphic": 0 },
+      }],
+    });
+    mockResponsesCreate.mockResolvedValue(makeModelResponse(JSON.stringify(VALID_BUNDLE)));
+
+    const events = await readStream(
+      await POST(makeRequest({ inputMode: "paste", text: ARTICLE_TEXT, mode: "bundle" }))
+    );
+
+    expect(events).toContainEqual(expect.objectContaining({ type: "result" }));
+  });
+});
 
 describe("POST /api/questions — OpenAI failure handling", () => {
   it("streams an error event when the model throws", async () => {

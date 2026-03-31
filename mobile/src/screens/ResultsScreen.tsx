@@ -11,6 +11,7 @@ import {
 import Animated from 'react-native-reanimated';
 import {ChallengeCard} from '../components/ChallengeCard';
 import {ItemCard} from '../components/ItemCard';
+import {ReportModal} from '../components/ReportModal';
 import {useRollTransition} from '../hooks/useRollTransition';
 import {tokens} from '../theme/tokens';
 import type {Bundle, Item, Meter} from '../types/api';
@@ -78,6 +79,7 @@ export function buildSegments(text: string, excerpts: string[]): Segment[] {
 export function ResultsScreen({bundle, articleText}: Props) {
   const [activeTab, setActiveTab] = useState<keyof Bundle>('fast');
   const [displayedTab, setDisplayedTab] = useState<keyof Bundle>('fast');
+  const [reportVisible, setReportVisible] = useState(false);
   const {rollOut, style: deckStyle} = useRollTransition();
   const [cardWidth, setCardWidth] = useState(0);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -168,22 +170,33 @@ export function ResultsScreen({bundle, articleText}: Props) {
         )}
       </ScrollView>
 
+      <ReportModal visible={reportVisible} onClose={() => setReportVisible(false)} />
+
       {/* Bottom deck — fixed height */}
       <View style={styles.deck}>
-        <View style={styles.tabBar} accessibilityRole="tablist">
-          {TABS.map(tab => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => handleTabPress(tab.key)}
-              accessibilityRole="tab"
-              accessibilityLabel={tab.label}
-              accessibilityState={{selected: activeTab === tab.key}}>
-              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.tabRow}>
+          <View style={styles.tabBar} accessibilityRole="tablist">
+            {TABS.map(tab => (
+              <TouchableOpacity
+                key={tab.key}
+                style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+                onPress={() => handleTabPress(tab.key)}
+                accessibilityRole="tab"
+                accessibilityLabel={tab.label}
+                accessibilityState={{selected: activeTab === tab.key}}>
+                <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity
+            onPress={() => setReportVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Report a problem with this output"
+            style={styles.flagBtn}>
+            <Text style={styles.flagIcon}>⚑</Text>
+          </TouchableOpacity>
         </View>
 
         <Animated.View
@@ -245,11 +258,24 @@ const styles = StyleSheet.create({
     borderTopColor: tokens.border,
     paddingTop: 8,
   },
+  tabRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 6,
+    gap: 6,
+  },
   tabBar: {
     flexDirection: 'row',
     gap: 6,
-    paddingHorizontal: 16,
-    marginBottom: 6,
+    flex: 1,
+  },
+  flagBtn: {
+    padding: 4,
+  },
+  flagIcon: {
+    color: tokens.muted,
+    fontSize: 15,
   },
   tab: {
     borderWidth: 1,

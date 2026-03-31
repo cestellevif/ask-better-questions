@@ -89,6 +89,51 @@ function isLabel(x: unknown): x is Label {
 }
 
 // -----------------------------
+// Content moderation
+// -----------------------------
+
+// Categories always rejected regardless of score
+const HARD_REJECT = new Set(["sexual/minors", "hate"]);
+
+// High-threshold categories — news legitimately covers these
+const SOFT_THRESHOLD: Record<string, number> = {
+  violence: 0.90,
+  harassment: 0.90,
+  "hate/threatening": 0.85,
+  "violence/graphic": 0.90,
+};
+
+type ModerationResult =
+  | { flagged: false }
+  | { flagged: true; reason: string };
+
+/**
+ * Screens article text with the OpenAI Moderation API.
+ *
+ * Hard-rejects hate and sexual/minors content at any score.
+ * Applies higher thresholds for violence/harassment to avoid
+ * over-flagging legitimate news coverage.
+ */
+async function moderateText(text: string): Promise<ModerationResult> {
+  const result = await getClient().moderations.create({ input: text });
+  const r = result.results[0];
+  if (!r) return { flagged: false };
+
+  const cats = r.categories as Record<string, boolean>;
+  const scores = r.category_scores as Record<string, number>;
+
+  for (const cat of HARD_REJECT) {
+    if (cats[cat]) return { flagged: true, reason: cat };
+  }
+
+  for (const [cat, threshold] of Object.entries(SOFT_THRESHOLD)) {
+    if ((scores[cat] ?? 0) >= threshold) return { flagged: true, reason: cat };
+  }
+
+  return { flagged: false };
+}
+
+// -----------------------------
 // Model call
 // -----------------------------
 
@@ -377,6 +422,12 @@ export async function POST(req: Request) {
         }
 
         send({ type: "progress", stage: "Analyzing…" });
+
+        const moderation = await moderateText(resolved.text);
+        if (moderation.flagged) {
+          send({ type: "error", error: "This content can't be analyzed." });
+          return;
+        }
 
         const prompt = buildPrompt(resolved.text, mode);
         const parsed = await runModel(prompt);
