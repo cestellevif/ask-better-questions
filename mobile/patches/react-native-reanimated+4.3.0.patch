@@ -1,0 +1,23 @@
+diff --git a/android/CMakeLists.txt b/android/CMakeLists.txt
+index 1234567..abcdefg 100644
+--- a/android/CMakeLists.txt
++++ b/android/CMakeLists.txt
+@@ -1,6 +1,7 @@
+ project(Reanimated)
+ cmake_minimum_required(VERSION 3.8)
+
+ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
++set(CMAKE_SUPPRESS_REGENERATION true)
+
+ set(CMAKE_CXX_STANDARD 20)
+@@ -38,8 +39,8 @@ set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
+ set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
+-set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
++get_filename_component(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp" ABSOLUTE)
+
+-file(GLOB_RECURSE REANIMATED_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
++file(GLOB_RECURSE REANIMATED_COMMON_CPP_SOURCES
+      "${COMMON_CPP_DIR}/reanimated/*.cpp")
+-file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
++file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES
+      "${ANDROID_CPP_DIR}/reanimated/*.cpp")

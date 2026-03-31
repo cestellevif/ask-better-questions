@@ -1,0 +1,23 @@
+diff --git a/android/src/main/jni/CMakeLists.txt b/android/src/main/jni/CMakeLists.txt
+index 1234567..abcdefg 100644
+--- a/android/src/main/jni/CMakeLists.txt
++++ b/android/src/main/jni/CMakeLists.txt
+@@ -1,6 +1,7 @@
+ cmake_minimum_required(VERSION 3.13)
+ set(CMAKE_VERBOSE_MAKEFILE ON)
++set(CMAKE_SUPPRESS_REGENERATION true)
+
+ set(LIB_LITERAL rnscreens)
+ set(LIB_TARGET_NAME react_codegen_${LIB_LITERAL})
+@@ -20,8 +21,10 @@ add_compile_options(
+   -Wno-dollar-in-identifier-extension
+ )
+
+-file(GLOB LIB_CUSTOM_SRCS CONFIGURE_DEPENDS *.cpp ${LIB_COMMON_COMPONENTS_DIR}/*.cpp ${LIB_COMMON_COMPONENTS_DIR}/utils/*.cpp)
+-file(GLOB LIB_CODEGEN_SRCS CONFIGURE_DEPENDS ${LIB_ANDROID_GENERATED_COMPONENTS_DIR}/*.cpp)
++# Use short junction C:\r -> common/cpp/react/renderer/components/rnscreens to stay under MAX_PATH
++file(GLOB LIB_CUSTOM_SRCS *.cpp C:/r/*.cpp C:/r/utils/*.cpp)
++# Use short junction C:\gs -> generated/source/codegen/jni/react/renderer/components/rnscreens to stay under MAX_PATH
++file(GLOB LIB_CODEGEN_SRCS C:/gs/*.cpp)
+
+ add_library(
