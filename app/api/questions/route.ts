@@ -119,8 +119,8 @@ async function moderateText(text: string): Promise<ModerationResult> {
   const r = result.results[0];
   if (!r) return { flagged: false };
 
-  const cats = r.categories as Record<string, boolean>;
-  const scores = r.category_scores as Record<string, number>;
+  const cats = r.categories as unknown as Record<string, boolean>;
+  const scores = r.category_scores as unknown as Record<string, number>;
 
   for (const cat of HARD_REJECT) {
     if (cats[cat]) return { flagged: true, reason: cat };
