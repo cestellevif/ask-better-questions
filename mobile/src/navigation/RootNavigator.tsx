@@ -1,12 +1,15 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {AnimatedHeaderTitle} from '../components/AnimatedHeaderTitle';
 import {AnalysisScreen} from '../screens/AnalysisScreen';
 import {HomeScreen} from '../screens/HomeScreen';
+import {TutorialScreen} from '../screens/TutorialScreen';
 import {tokens} from '../theme/tokens';
 
 export type RootStackParamList = {
   Home: undefined;
   Analysis: {url?: string};
+  Tutorial: {fromHome?: boolean};
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -28,7 +31,12 @@ export function RootNavigator() {
       <Stack.Screen
         name="Analysis"
         component={AnalysisScreen}
-        options={{title: 'Analyzing…'}}
+        options={{headerTitle: () => <AnimatedHeaderTitle text="Analyzing…" />}}
+      />
+      <Stack.Screen
+        name="Tutorial"
+        component={TutorialScreen}
+        options={{headerShown: false, gestureEnabled: false}}
       />
     </Stack.Navigator>
   );

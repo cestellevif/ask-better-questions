@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -17,6 +17,20 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export function HomeScreen({navigation}: Props) {
   const [url, setUrl] = useState('');
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Tutorial', {fromHome: true})}
+          accessibilityRole="button"
+          accessibilityLabel="Open tutorial"
+          style={{marginRight: 4}}>
+          <Text style={{color: tokens.muted, fontSize: 18}}>ⓘ</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   const handleAnalyze = () => {
     let trimmed = url.trim();

@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {AccessibilityInfo, View} from 'react-native';
 import Animated from 'react-native-reanimated';
+import {AnimatedHeaderTitle} from '../components/AnimatedHeaderTitle';
 import {CandidateList} from '../components/CandidateList';
 import {ErrorBanner} from '../components/ErrorBanner';
 import {WarmupScreen} from '../components/WarmupScreen';
@@ -88,7 +89,9 @@ export function AnalysisScreen({route, navigation}: Props) {
       announcement = phase.stage;
     }
 
-    navigation.setOptions({title});
+    navigation.setOptions({
+      headerTitle: () => <AnimatedHeaderTitle text={title} />,
+    });
     if (announcement) {
       AccessibilityInfo.announceForAccessibility(announcement);
     }

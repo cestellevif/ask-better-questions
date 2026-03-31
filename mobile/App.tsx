@@ -3,6 +3,7 @@ import {StatusBar} from 'react-native';
 import {NavigationContainer, createNavigationContainerRef} from '@react-navigation/native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ShareMenuReactView from 'react-native-share-menu';
 import {RootNavigator} from './src/navigation/RootNavigator';
 import type {RootStackParamList} from './src/navigation/RootNavigator';
@@ -46,7 +47,13 @@ export default function App() {
     return () => listener.remove();
   }, []);
 
-  function handleNavigationReady() {
+  async function handleNavigationReady() {
+    // Show tutorial on first launch; share-intent navigation runs after
+    const seen = await AsyncStorage.getItem('@abq/tutorial_seen');
+    if (!seen) {
+      navigationRef.reset({routes: [{name: 'Tutorial'}]});
+      return;
+    }
     const url = pendingUrlRef.current;
     if (url) {
       pendingUrlRef.current = null;
