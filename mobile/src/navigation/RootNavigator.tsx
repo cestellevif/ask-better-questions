@@ -22,6 +22,8 @@ export function RootNavigator() {
         headerTintColor: tokens.yellow,
         headerTitleStyle: {fontWeight: '700'},
         contentStyle: {backgroundColor: tokens.bg},
+        animation: 'fade',
+        animationDuration: 280,
       }}>
       <Stack.Screen
         name="Home"

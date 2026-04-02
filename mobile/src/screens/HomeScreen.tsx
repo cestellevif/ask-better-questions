@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import {tokens} from '../theme/tokens';
+import {normalizeUrl} from '../utils/url';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/RootNavigator';
 
@@ -33,15 +34,9 @@ export function HomeScreen({navigation}: Props) {
   }, [navigation]);
 
   const handleAnalyze = () => {
-    let trimmed = url.trim();
-    if (!trimmed) {
-      return;
-    }
-    if (!/^https?:\/\//i.test(trimmed)) {
-      trimmed = 'https://' + trimmed;
-    }
+    if (!url.trim()) return;
     Keyboard.dismiss();
-    navigation.navigate('Analysis', {url: trimmed});
+    navigation.navigate('Analysis', {url: normalizeUrl(url)});
   };
 
   return (
@@ -74,7 +69,7 @@ export function HomeScreen({navigation}: Props) {
         disabled={!url.trim()}
         accessibilityRole="button"
         accessibilityLabel="Analyze"
-        accessibilityHint={url.trim() ? 'Analyzes the article at the entered URL' : 'Enter a URL first'}
+        accessibilityHint={url.trim() ? 'Analyzes the article at the entered URL' : 'Paste or type the complete article URL first'}
         accessibilityState={{disabled: !url.trim()}}>
         <Text style={styles.btnText}>Analyze</Text>
       </TouchableOpacity>

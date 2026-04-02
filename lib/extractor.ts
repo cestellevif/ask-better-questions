@@ -176,6 +176,7 @@ export function looksLikeArchivePath(url: string): boolean {
 export function looksLikeSectionPath(url: string): boolean {
   try {
     const parts = new URL(url).pathname.split("/").filter(Boolean);
+    if (parts.length === 0) return true; // bare domain homepage (e.g. cnn.com, bbc.com)
     return parts.length === 1 && !/\d/.test(parts[0]) && !parts[0].includes(".");
   } catch { return false; }
 }
