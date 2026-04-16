@@ -50,13 +50,15 @@ export function ItemCard({item, onExpand}: Props) {
       next ? `Expanded. ${(item.why ?? item.text).slice(0, 100)}` : 'Collapsed',
     );
 
+    // Scroll to excerpt is navigation, not animation — always fire regardless of reduceMotion
+    if (next) onExpand?.();
+
     if (reduceMotion) return;
 
     rotation.value = withSpring(next ? 1 : 0, {damping: 12, stiffness: 160});
     if (next) {
       whyAnim.value = 0;
       whyAnim.value = withSpring(1, {damping: 14, stiffness: 180});
-      onExpand?.();
     } else {
       whyAnim.value = withTiming(0, {duration: 120});
     }
