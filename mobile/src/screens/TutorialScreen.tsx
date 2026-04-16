@@ -26,6 +26,11 @@ const SLIDES = [
     body: 'Share any article URL and the app generates 3 sharp questions to help you read more critically.',
   },
   {
+    icon: '↗',
+    headline: 'Share from any browser',
+    body: 'Open an article in Chrome or any browser, tap the Share button, and choose Ask Better Questions. To keep ABQ at the top, tap More and hold its icon to pin it.',
+  },
+  {
     icon: '⚡',
     headline: 'Three ways to dig deeper',
     body: 'Quick — fast questions. Curious — more pointed. Answers — cues to find better information.',
