@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -26,7 +27,9 @@ export function HomeScreen({navigation}: Props) {
           onPress={() => navigation.navigate('Tutorial', {fromHome: true})}
           accessibilityRole="button"
           accessibilityLabel="Open tutorial"
-          style={{marginRight: 4}}>
+          accessibilityHint="Opens the tutorial and how-to guide"
+          hitSlop={{top: 12, bottom: 12, left: 12, right: 12}}
+          style={{marginRight: 4, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center'}}>
           <Text style={{color: tokens.muted, fontSize: 18}}>ⓘ</Text>
         </TouchableOpacity>
       ),
@@ -48,6 +51,7 @@ export function HomeScreen({navigation}: Props) {
         Paste an article URL to analyze it, or share one from your browser.
       </Text>
 
+      <Text style={styles.inputLabel}>Article URL</Text>
       <TextInput
         style={styles.input}
         value={url}
@@ -73,6 +77,14 @@ export function HomeScreen({navigation}: Props) {
         accessibilityState={{disabled: !url.trim()}}>
         <Text style={styles.btnText}>Analyze</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.privacyLink}
+        onPress={() => Linking.openURL('https://ask-better-questions-seven.vercel.app/privacy')}
+        accessibilityRole="link"
+        accessibilityLabel="View privacy policy">
+        <Text style={styles.privacyLinkText}>Privacy Policy</Text>
+      </TouchableOpacity>
     </View>
     </KeyboardAvoidingView>
   );
@@ -94,6 +106,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     marginBottom: 28,
+  },
+  inputLabel: {
+    color: tokens.muted,
+    fontSize: 12,
+    marginBottom: 6,
   },
   input: {
     backgroundColor: tokens.card,
@@ -119,5 +136,14 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 15,
     fontWeight: '700',
+  },
+  privacyLink: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  privacyLinkText: {
+    color: tokens.muted,
+    fontSize: 12,
+    opacity: 0.7,
   },
 });

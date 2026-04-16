@@ -1,25 +1,41 @@
 export const runtime = "nodejs";
 
-type ReportBody = {
-  reason?: unknown;
-  categories?: unknown;
-  score?: unknown;
-};
+const VALID_REASONS = new Set(["inappropriate", "inaccurate", "harmful", "other"]);
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
 
 export async function POST(req: Request) {
+  let body: unknown;
+
   try {
-    const body = (await req.json()) as ReportBody;
-    const reason = typeof body.reason === "string" ? body.reason : "unknown";
-    const categories = body.categories ?? null;
-    const score = typeof body.score === "number" ? body.score : null;
-
-    console.log("[report]", JSON.stringify({ reason, categories, score, ts: new Date().toISOString() }));
-
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ ok: false }), { status: 400 });
+    return Response.json({ error: "Invalid JSON body." }, { status: 400 });
   }
+
+  if (typeof body !== "object" || body === null) {
+    return Response.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const { reason } = body as Record<string, unknown>;
+
+  if (typeof reason !== "string" || !VALID_REASONS.has(reason)) {
+    return Response.json(
+      { error: "Invalid reason. Must be one of: inappropriate, inaccurate, harmful, other." },
+      { status: 400 }
+    );
+  }
+
+  console.log("[report]", reason, new Date().toISOString());
+
+  return Response.json({ ok: true });
 }

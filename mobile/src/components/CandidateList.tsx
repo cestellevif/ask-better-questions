@@ -6,9 +6,10 @@ import Animated, {
   withSpring,
   withDelay,
 } from 'react-native-reanimated';
-import {ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {AccessibilityInfo, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useReducedMotion} from '../hooks/useReducedMotion';
 import {tokens} from '../theme/tokens';
+import {SPRING_SNAPPY} from '../theme/animation';
 import type {ExtractCandidate} from '../types/api';
 
 interface ItemProps {
@@ -34,7 +35,7 @@ function CandidateItem({item, index, exiting, onPress, accessibilityLabel}: Item
     if (reduceMotion) return;
     const delay = index * 55;
     opacity.value = withDelay(delay, withTiming(1, {duration: 280}));
-    translateX.value = withDelay(delay, withSpring(0, {damping: 18, stiffness: 160}));
+    translateX.value = withDelay(delay, withSpring(0, SPRING_SNAPPY));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -65,9 +66,10 @@ function CandidateItem({item, index, exiting, onPress, accessibilityLabel}: Item
 interface Props {
   candidates: ExtractCandidate[];
   onPick: (url: string) => void;
+  onCancel?: () => void;
 }
 
-export function CandidateList({candidates, onPick}: Props) {
+export function CandidateList({candidates, onPick, onCancel}: Props) {
   const reduceMotion = useReducedMotion();
   const [exiting, setExiting] = useState(false);
   const chosenUrlRef = useRef<string | null>(null);
@@ -77,6 +79,10 @@ export function CandidateList({candidates, onPick}: Props) {
 
   function handlePick(url: string) {
     if (exiting) return;
+    const picked = candidates.find(c => c.url === url);
+    AccessibilityInfo.announceForAccessibility(
+      `Selected: ${picked?.title ?? 'article'}. Analyzing now.`
+    );
     if (reduceMotion) {
       onPick(url);
       return;
@@ -108,6 +114,18 @@ export function CandidateList({candidates, onPick}: Props) {
           accessibilityLabel={`Article ${index + 1} of ${candidates.length}: ${item.title || item.url}`}
         />
       ))}
+      {onCancel && (
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => {
+            AccessibilityInfo.announceForAccessibility('Selection cancelled');
+            onCancel();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back">
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
@@ -122,8 +140,17 @@ const styles = StyleSheet.create({
   },
   prompt: {
     color: tokens.muted,
-    fontSize: 12,
+    fontSize: 13,
     marginBottom: 12,
+  },
+  backBtn: {
+    marginTop: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  backText: {
+    color: tokens.muted,
+    fontSize: 14,
   },
   item: {
     backgroundColor: tokens.card,

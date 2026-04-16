@@ -27,6 +27,27 @@ interface Props {
 
 type State = 'idle' | 'sending' | 'done' | 'error';
 
+function FeedbackView({title, body, buttonLabel, onClose}: {
+  title: string;
+  body: string;
+  buttonLabel: string;
+  onClose: () => void;
+}) {
+  return (
+    <View
+      style={styles.feedback}
+      accessible={true}
+      accessibilityLabel={`${title}. ${body}`}
+      accessibilityLiveRegion="assertive">
+      <Text style={styles.feedbackTitle}>{title}</Text>
+      <Text style={styles.feedbackBody}>{body}</Text>
+      <Pressable style={styles.btnPrimary} onPress={onClose}>
+        <Text style={styles.btnPrimaryText}>{buttonLabel}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 export function ReportModal({visible, onClose}: Props) {
   const [selected, setSelected] = useState<Reason | null>(null);
   const [state, setState] = useState<State>('idle');
@@ -45,6 +66,7 @@ export function ReportModal({visible, onClose}: Props) {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({reason: selected}),
+        signal: AbortSignal.timeout(10_000),
       });
       setState('done');
     } catch {
@@ -59,47 +81,50 @@ export function ReportModal({visible, onClose}: Props) {
       animationType="fade"
       onRequestClose={handleClose}
       accessibilityViewIsModal>
-      <Pressable style={styles.backdrop} onPress={handleClose}>
+      <Pressable
+        style={styles.backdrop}
+        onPress={handleClose}
+        accessibilityLabel="Dismiss report dialog"
+        accessibilityHint="Double tap to close without submitting"
+        accessibilityRole="button">
         <Pressable style={styles.sheet} onPress={() => {}}>
           {state === 'done' ? (
-            <View style={styles.feedback}>
-              <Text style={styles.feedbackTitle}>Thanks for the report</Text>
-              <Text style={styles.feedbackBody}>
-                We'll review this and use it to improve the app.
-              </Text>
-              <Pressable style={styles.btnPrimary} onPress={handleClose}>
-                <Text style={styles.btnPrimaryText}>Done</Text>
-              </Pressable>
-            </View>
+            <FeedbackView
+              title="Thanks for the report"
+              body="We'll review this and use it to improve the app."
+              buttonLabel="Done"
+              onClose={handleClose}
+            />
           ) : state === 'error' ? (
-            <View style={styles.feedback}>
-              <Text style={styles.feedbackTitle}>Couldn't send report</Text>
-              <Text style={styles.feedbackBody}>Check your connection and try again.</Text>
-              <Pressable style={styles.btnPrimary} onPress={handleClose}>
-                <Text style={styles.btnPrimaryText}>Close</Text>
-              </Pressable>
-            </View>
+            <FeedbackView
+              title="Couldn't send report"
+              body="Check your connection and try again."
+              buttonLabel="Close"
+              onClose={handleClose}
+            />
           ) : (
             <>
               <Text style={styles.title}>Report a problem</Text>
               <Text style={styles.subtitle}>What's wrong with this output?</Text>
-              {REASONS.map(r => (
-                <Pressable
-                  key={r.key}
-                  style={[styles.option, selected === r.key && styles.optionSelected]}
-                  onPress={() => setSelected(r.key)}
-                  accessibilityRole="radio"
-                  accessibilityState={{checked: selected === r.key}}
-                  accessibilityLabel={r.label}>
-                  <View
-                    style={[
-                      styles.radio,
-                      selected === r.key && styles.radioSelected,
-                    ]}
-                  />
-                  <Text style={styles.optionText}>{r.label}</Text>
-                </Pressable>
-              ))}
+              <View accessibilityRole="radiogroup" accessibilityLabel="Reason for report">
+                {REASONS.map(r => (
+                  <Pressable
+                    key={r.key}
+                    style={[styles.option, selected === r.key && styles.optionSelected]}
+                    onPress={() => setSelected(r.key)}
+                    accessibilityRole="radio"
+                    accessibilityState={{checked: selected === r.key}}
+                    accessibilityLabel={r.label}>
+                    <View
+                      style={[
+                        styles.radio,
+                        selected === r.key && styles.radioSelected,
+                      ]}
+                    />
+                    <Text style={styles.optionText}>{r.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
               <View style={styles.actions}>
                 <Pressable style={styles.btnSecondary} onPress={handleClose}>
                   <Text style={styles.btnSecondaryText}>Cancel</Text>
@@ -108,7 +133,12 @@ export function ReportModal({visible, onClose}: Props) {
                   style={[styles.btnPrimary, !selected && styles.btnDisabled]}
                   onPress={handleSend}
                   disabled={!selected || state === 'sending'}
-                  accessibilityState={{disabled: !selected || state === 'sending'}}>
+                  accessibilityState={{disabled: !selected || state === 'sending'}}
+                  accessibilityLabel={
+                    state === 'sending' ? 'Sending…' :
+                    !selected ? 'Select a reason first' :
+                    'Send report'
+                  }>
                   {state === 'sending' ? (
                     <ActivityIndicator color={tokens.bg} size="small" />
                   ) : (

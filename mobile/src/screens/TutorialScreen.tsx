@@ -1,13 +1,14 @@
 import React, {useState} from 'react';
 import {
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {tokens} from '../theme/tokens';
+import {STORAGE_KEYS} from '../storage/keys';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/RootNavigator';
 
@@ -48,7 +49,7 @@ export function TutorialScreen({navigation, route}: Props) {
   const slide = SLIDES[currentIndex];
 
   async function complete() {
-    await AsyncStorage.setItem('@abq/tutorial_seen', '1');
+    await AsyncStorage.setItem(STORAGE_KEYS.TUTORIAL_SEEN, '1');
     if (fromHome) {
       navigation.goBack();
     } else {
@@ -60,20 +61,18 @@ export function TutorialScreen({navigation, route}: Props) {
     <SafeAreaView style={styles.root}>
       {/* Top row: dots + skip */}
       <View style={styles.topRow}>
-        <View style={styles.dots} accessibilityRole="none">
+        <View style={styles.dots} accessibilityElementsHidden>
           {SLIDES.map((_, i) => (
-            <View
-              key={i}
-              style={[styles.dot, i === currentIndex && styles.dotActive]}
-              accessibilityLabel={`Slide ${i + 1} of ${SLIDES.length}`}
-            />
+            <View key={i} style={[styles.dot, i === currentIndex && styles.dotActive]} />
           ))}
         </View>
         {!isLast && (
           <TouchableOpacity
             onPress={complete}
             accessibilityRole="button"
-            accessibilityLabel="Skip tutorial">
+            accessibilityLabel="Skip tutorial"
+            accessibilityHint="Skips the tutorial and goes to the home screen"
+            hitSlop={{top: 12, bottom: 12, left: 12, right: 12}}>
             <Text style={styles.skip}>Skip</Text>
           </TouchableOpacity>
         )}
@@ -82,8 +81,10 @@ export function TutorialScreen({navigation, route}: Props) {
       {/* Slide content */}
       <View
         style={styles.content}
-        accessibilityLiveRegion="polite">
-        <Text style={styles.icon}>{slide.icon}</Text>
+        accessible={true}
+        accessibilityLiveRegion="polite"
+        accessibilityLabel={`Slide ${currentIndex + 1} of ${SLIDES.length}: ${slide.headline}. ${slide.body}`}>
+        <Text style={styles.icon} accessible={false}>{slide.icon}</Text>
         <Text style={styles.headline}>{slide.headline}</Text>
         <Text style={styles.body}>{slide.body}</Text>
       </View>

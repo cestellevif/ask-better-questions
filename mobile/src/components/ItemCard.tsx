@@ -1,11 +1,17 @@
-import React, {useRef, useState} from 'react';
+import React, {useState} from 'react';
 import {
-  Animated,
+  AccessibilityInfo,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import {useReducedMotion} from '../hooks/useReducedMotion';
 import {tokens} from '../theme/tokens';
 import type {Item} from '../types/api';
@@ -25,47 +31,34 @@ export function ItemCard({item, onExpand}: Props) {
   const [expanded, setExpanded] = useState(false);
   const colors = LABEL_COLORS[item.label] ?? LABEL_COLORS.Words;
   const reduceMotion = useReducedMotion();
-  const rotation = useRef(new Animated.Value(0)).current;
-  const whyAnim = useRef(new Animated.Value(0)).current;
+  const rotation = useSharedValue(0);
+  const whyAnim = useSharedValue(0);
 
-  const iconRotate = rotation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '45deg'],
-  });
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{rotate: `${rotation.value * 45}deg`}],
+  }));
 
-  const whyOpacity = whyAnim;
-  const whyTranslateY = whyAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [6, 0],
-  });
+  const whyStyle = useAnimatedStyle(() => ({
+    opacity: whyAnim.value,
+    transform: [{translateY: 6 * (1 - whyAnim.value)}],
+  }));
 
   function toggle() {
     const next = !expanded;
     setExpanded(next);
+    AccessibilityInfo.announceForAccessibility(
+      next ? `Expanded. ${(item.why ?? item.text).slice(0, 100)}` : 'Collapsed',
+    );
 
     if (reduceMotion) return;
 
-    Animated.spring(rotation, {
-      toValue: next ? 1 : 0,
-      useNativeDriver: true,
-      damping: 12,
-      stiffness: 160,
-    }).start();
+    rotation.value = withSpring(next ? 1 : 0, {damping: 12, stiffness: 160});
     if (next) {
-      whyAnim.setValue(0);
-      Animated.spring(whyAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        damping: 14,
-        stiffness: 180,
-      }).start();
+      whyAnim.value = 0;
+      whyAnim.value = withSpring(1, {damping: 14, stiffness: 180});
       onExpand?.();
     } else {
-      Animated.timing(whyAnim, {
-        toValue: 0,
-        duration: 120,
-        useNativeDriver: true,
-      }).start();
+      whyAnim.value = withTiming(0, {duration: 120});
     }
   }
 
@@ -77,13 +70,14 @@ export function ItemCard({item, onExpand}: Props) {
       accessibilityRole="button"
       accessibilityLabel={`${item.label}: ${item.text}`}
       accessibilityHint={expanded ? 'Collapse to hide explanation' : 'Expand to read why'}
-      accessibilityState={{expanded}}>
+      accessibilityState={{expanded}}
+      hitSlop={{top: 12, bottom: 12, left: 12, right: 12}}>
       <View style={styles.header}>
         <View style={[styles.badge, {backgroundColor: colors.bg}]}>
           <Text style={[styles.badgeText, {color: colors.text}]}>{item.label}</Text>
         </View>
         <Animated.Text
-          style={[styles.icon, {color: colors.text, transform: [{rotate: iconRotate}]}]}
+          style={[styles.icon, {color: colors.text}, iconStyle]}
           accessible={false}
           importantForAccessibility="no-hide-descendants">
           +
@@ -91,11 +85,7 @@ export function ItemCard({item, onExpand}: Props) {
       </View>
       <Text style={styles.question}>{item.text}</Text>
       {expanded && (
-        <Animated.Text
-          style={[
-            styles.why,
-            {opacity: whyOpacity, transform: [{translateY: whyTranslateY}]},
-          ]}>
+        <Animated.Text style={[styles.why, whyStyle]}>
           {item.why}
         </Animated.Text>
       )}
@@ -111,6 +101,7 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radiusCard,
     padding: 12,
     marginBottom: 8,
+    minHeight: 44,
   },
   header: {
     flexDirection: 'row',
@@ -124,7 +115,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
@@ -142,8 +133,8 @@ const styles = StyleSheet.create({
   },
   why: {
     color: tokens.muted,
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 12,
+    lineHeight: 16,
     marginTop: 6,
   },
 });

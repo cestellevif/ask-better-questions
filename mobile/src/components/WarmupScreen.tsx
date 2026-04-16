@@ -1,8 +1,9 @@
 import {useEffect, useState} from 'react';
 import Animated from 'react-native-reanimated';
-import {StyleSheet, Text, View} from 'react-native';
+import {AccessibilityInfo, StyleSheet, Text, View} from 'react-native';
 import {tokens} from '../theme/tokens';
 import {useRollTransition} from '../hooks/useRollTransition';
+import {useReducedMotion} from '../hooks/useReducedMotion';
 
 const SLIDES = [
   'Ask Better Questions',
@@ -33,8 +34,18 @@ export function WarmupScreen({stage}: Props) {
     () => Math.floor(Math.random() * SLIDES.length),
   );
   const {rollOut, style} = useRollTransition();
+  const reduceMotion = useReducedMotion();
+
+  // Announce the initial stage for screen readers (live region only fires on changes)
+  useEffect(() => {
+    if (stage) AccessibilityInfo.announceForAccessibility(stage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
+    // Under reduce-motion the ticker stays on the first slide — no cycling.
+    if (reduceMotion) return;
+
     const advance = () => {
       rollOut(() => {
         setSlideIdx(i => {
@@ -51,7 +62,7 @@ export function WarmupScreen({stage}: Props) {
       clearTimeout(initial);
       clearInterval(interval);
     };
-  }, [rollOut]);
+  }, [rollOut, reduceMotion]);
 
   return (
     <View style={styles.container}>
@@ -92,6 +103,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: tokens.muted,
-    fontSize: 11,
+    fontSize: 12,
   },
 });

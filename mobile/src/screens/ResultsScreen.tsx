@@ -1,5 +1,6 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
+  AccessibilityInfo,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -9,6 +10,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {ChallengeCard} from '../components/ChallengeCard';
 import {ItemCard} from '../components/ItemCard';
 import {ReportModal} from '../components/ReportModal';
@@ -33,6 +35,14 @@ interface Props {
 }
 
 type Segment = {text: string; highlight: boolean};
+
+// Checks if haystack contains needle, falling back to whitespace-collapsed comparison
+function matchesCollapsed(haystack: string, needle: string): boolean {
+  return (
+    haystack.includes(needle) ||
+    haystack.replace(/\s+/g, ' ').includes(needle.replace(/\s+/g, ' '))
+  );
+}
 
 export function buildSegments(text: string, excerpts: string[]): Segment[] {
   const ranges: {start: number; end: number}[] = [];
@@ -82,34 +92,52 @@ export function ResultsScreen({bundle, articleText}: Props) {
   const [reportVisible, setReportVisible] = useState(false);
   const {rollOut, style: deckStyle} = useRollTransition();
   const [cardWidth, setCardWidth] = useState(0);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
   const listRef = useRef<FlatList<CardData>>(null);
   const articleScrollRef = useRef<ScrollView>(null);
   const paragraphYRef = useRef<Record<number, number>>({});
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const insets = useSafeAreaInsets();
+  const viewabilityConfig = useRef({viewAreaCoveragePercentThreshold: 50});
+  const onViewableItemsChanged = useRef(({viewableItems}: {viewableItems: {index: number | null}[]}) => {
+    if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+      const newIndex = viewableItems[0].index;
+      setActiveCardIndex(newIndex);
+      // cards is captured from closure — length announced for swipe navigation
+      AccessibilityInfo.announceForAccessibility(`Card ${newIndex + 1} of ${cards.length}`);
+    }
+  });
 
-  const cards: CardData[] = [
-    ...bundle[displayedTab].map(item => ({kind: 'item' as const, item})),
-    {kind: 'challenge' as const, tab: displayedTab},
-  ];
+  const paragraphs = useMemo(
+    () => (articleText ? articleText.split(/\n+/).filter(p => p.trim()) : []),
+    [articleText],
+  );
 
-  const excerpts = bundle[displayedTab]
-    .map(item => item.excerpt)
-    .filter((e): e is string => !!e);
+  const excerpts = useMemo(
+    () => bundle[displayedTab].map(item => item.excerpt).filter((e): e is string => !!e),
+    [bundle, displayedTab],
+  );
 
-  const paragraphs = articleText
-    ? articleText.split(/\n+/).filter(p => p.trim())
-    : [];
+  const cards: CardData[] = useMemo(
+    () => [
+      ...bundle[displayedTab].map(item => ({kind: 'item' as const, item})),
+      {kind: 'challenge' as const, tab: displayedTab},
+    ],
+    [bundle, displayedTab],
+  );
+
+  // Clear cached paragraph positions when article or tab changes
+  useEffect(() => {
+    paragraphYRef.current = {};
+  }, [articleText, displayedTab]);
 
   function scrollToExcerpt(excerpt: string | undefined) {
     if (!excerpt || !articleText) return;
     const needle = excerpt.trim();
-    const needleCollapsed = needle.replace(/\s+/g, ' ');
 
     for (let i = 0; i < paragraphs.length; i++) {
-      const para = paragraphs[i];
-      if (para.includes(needle) || para.replace(/\s+/g, ' ').includes(needleCollapsed)) {
+      if (matchesCollapsed(paragraphs[i], needle)) {
         const y = paragraphYRef.current[i];
         if (y !== undefined) {
           // Scroll with a small offset so the paragraph isn't flush against the top
@@ -122,17 +150,14 @@ export function ResultsScreen({bundle, articleText}: Props) {
 
   function handleTabPress(key: keyof Bundle) {
     setActiveTab(key); // Tab bar indicator updates immediately
+    const tabName = TABS.find(t => t.key === key)?.label ?? key;
+    AccessibilityInfo.announceForAccessibility(`${tabName} tab selected`);
     if (key === displayedTab) return;
     rollOut(() => {
       setDisplayedTab(key);
-      setCurrentCardIndex(0);
+      setActiveCardIndex(0);
       listRef.current?.scrollToOffset({offset: 0, animated: false});
     });
-  }
-
-  function handleScrollEnd(event: {nativeEvent: {contentOffset: {x: number}}}) {
-    const index = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
-    setCurrentCardIndex(index);
   }
 
   return (
@@ -153,7 +178,10 @@ export function ResultsScreen({bundle, articleText}: Props) {
               <Text style={isDark ? styles.articleTextDark : styles.articleTextLight}>
                 {buildSegments(para, excerpts).map((seg, i) =>
                   seg.highlight ? (
-                    <Text key={i} style={isDark ? styles.highlightDark : styles.highlightLight}>
+                    <Text
+                      key={i}
+                      style={isDark ? styles.highlightDark : styles.highlightLight}
+                      accessibilityLabel={`highlighted: ${seg.text}`}>
                       {seg.text}
                     </Text>
                   ) : (
@@ -172,10 +200,13 @@ export function ResultsScreen({bundle, articleText}: Props) {
 
       <ReportModal visible={reportVisible} onClose={() => setReportVisible(false)} />
 
-      {/* Bottom deck — fixed height */}
-      <View style={styles.deck}>
+      {/* Bottom deck — fixed height, clears gesture bar */}
+      <View style={[styles.deck, {paddingBottom: insets.bottom}]}>
         <View style={styles.tabRow}>
-          <View style={styles.tabBar} accessibilityRole="tablist">
+          <View
+            style={styles.tabBar}
+            accessibilityRole="tablist"
+            accessibilityLabel="Choose question mode">
             {TABS.map(tab => (
               <TouchableOpacity
                 key={tab.key}
@@ -183,7 +214,8 @@ export function ResultsScreen({bundle, articleText}: Props) {
                 onPress={() => handleTabPress(tab.key)}
                 accessibilityRole="tab"
                 accessibilityLabel={tab.label}
-                accessibilityState={{selected: activeTab === tab.key}}>
+                accessibilityState={{selected: activeTab === tab.key}}
+                hitSlop={{top: 13, bottom: 13, left: 6, right: 6}}>
                 <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
                   {tab.label}
                 </Text>
@@ -194,7 +226,9 @@ export function ResultsScreen({bundle, articleText}: Props) {
             onPress={() => setReportVisible(true)}
             accessibilityRole="button"
             accessibilityLabel="Report a problem with this output"
-            style={styles.flagBtn}>
+            accessibilityHint="Opens a form to report a problem"
+            style={styles.flagBtn}
+            hitSlop={{top: 12, bottom: 12, left: 12, right: 12}}>
             <Text style={styles.flagIcon}>⚑</Text>
           </TouchableOpacity>
         </View>
@@ -210,8 +244,9 @@ export function ResultsScreen({bundle, articleText}: Props) {
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               keyExtractor={(_, i) => `${displayedTab}-${i}`}
-              onMomentumScrollEnd={handleScrollEnd}
               accessibilityLabel={`${cards.length} cards`}
+              viewabilityConfig={viewabilityConfig.current}
+              onViewableItemsChanged={onViewableItemsChanged.current}
               renderItem={({item, index}) =>
                 item.kind === 'item' ? (
                   <View
@@ -233,6 +268,11 @@ export function ResultsScreen({bundle, articleText}: Props) {
             />
           )}
         </Animated.View>
+        <View style={styles.dotsRow} accessibilityElementsHidden>
+          {cards.map((_, i) => (
+            <View key={i} style={[styles.dotIndicator, i === activeCardIndex && styles.dotIndicatorActive]} />
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -249,11 +289,11 @@ const styles = StyleSheet.create({
   articleTextDark: {color: tokens.fg, fontSize: 15, lineHeight: 24, marginBottom: 12},
   noArticle: {color: tokens.muted, fontSize: 13},
   highlightLight: {backgroundColor: 'rgba(255,215,0,0.50)', color: '#1a1a1a'},
-  highlightDark: {backgroundColor: 'rgba(255,215,0,0.35)', color: tokens.fg},
+  highlightDark: {backgroundColor: 'rgba(255,215,0,0.55)', color: tokens.fg},
 
   // Fixed-height bottom deck
   deck: {
-    height: 209,
+    minHeight: 209,
     borderTopWidth: 1,
     borderTopColor: tokens.border,
     paddingTop: 8,
@@ -271,10 +311,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   flagBtn: {
-    padding: 4,
+    padding: 10,
   },
   flagIcon: {
-    color: tokens.muted,
+    color: tokens.yellow,
     fontSize: 15,
   },
   tab: {
@@ -285,7 +325,10 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   tabActive: {borderColor: tokens.yellow},
-  tabText: {color: tokens.muted, fontSize: 11},
+  tabText: {color: tokens.muted, fontSize: 12},
+  dotsRow: {flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4, paddingVertical: 6},
+  dotIndicator: {width: 6, height: 6, borderRadius: 3, backgroundColor: tokens.muted},
+  dotIndicatorActive: {backgroundColor: tokens.yellow},
   tabTextActive: {color: tokens.yellow},
 
   cardArea: {flex: 1},
