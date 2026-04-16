@@ -127,10 +127,11 @@ export function ResultsScreen({bundle, articleText}: Props) {
     [bundle, displayedTab],
   );
 
-  // Clear cached paragraph positions when article or tab changes
+  // Clear cached paragraph positions only when the article itself changes
+  // (tab switches don't change paragraph layout, so onLayout won't re-fire)
   useEffect(() => {
     paragraphYRef.current = {};
-  }, [articleText, displayedTab]);
+  }, [articleText]);
 
   function scrollToExcerpt(excerpt: string | undefined) {
     if (!excerpt || !articleText) return;
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
 
   // Fixed-height bottom deck
   deck: {
-    minHeight: 209,
+    minHeight: 260,
     borderTopWidth: 1,
     borderTopColor: tokens.border,
     paddingTop: 8,
