@@ -194,6 +194,7 @@ export function guessStoryLinks(html: string, baseUrl: string): LinkCandidate[] 
   const { document: doc } = parseHTML(html);
   const root: Element = doc.querySelector("main") ?? doc.body;
   const base = new URL(baseUrl);
+  const baseRoot = base.hostname.replace(/^www\./, "");
   const seen = new Set<string>();
   const links: LinkCandidate[] = [];
 
@@ -205,7 +206,8 @@ export function guessStoryLinks(html: string, baseUrl: string): LinkCandidate[] 
     let href: URL;
     try { href = new URL(el.getAttribute("href")!, baseUrl); } catch { continue; }
     if (!["http:", "https:"].includes(href.protocol)) continue;
-    if (href.hostname !== base.hostname) continue;
+    // Strip www. before comparing so foxnews.com and www.foxnews.com are treated as the same host
+    if (href.hostname.replace(/^www\./, "") !== baseRoot) continue;
 
     const key = `${href.hostname}${href.pathname}${href.search}`;
     if (seen.has(key)) continue;

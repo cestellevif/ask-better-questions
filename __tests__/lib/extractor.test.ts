@@ -127,6 +127,14 @@ describe("guessStoryLinks", () => {
     expect(guessStoryLinks(h, BASE)).toHaveLength(0);
   });
 
+  it("includes www-prefixed links when base has no www (redirect case)", () => {
+    // foxnews.com redirects to www.foxnews.com — HTML links use www host, base does not
+    const h = `<html><body><main>
+      <a href="https://www.example.com/politics/2024/story-slug">Long enough headline about breaking news today</a>
+    </main></body></html>`;
+    expect(guessStoryLinks(h, BASE)).toHaveLength(1);
+  });
+
   it("excludes links with nav keywords", () => {
     const h = html([
       { href: "/subscribe/plan", text: "Subscribe to get full access to our articles" },
