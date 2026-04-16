@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import {tokens} from '../theme/tokens';
+import {BASE_URL} from '../config';
 
 const REASONS = [
   {key: 'inappropriate', label: 'Inappropriate content'},
@@ -18,7 +19,7 @@ const REASONS = [
 
 type Reason = (typeof REASONS)[number]['key'];
 
-const REPORT_URL = 'https://ask-better-questions-seven.vercel.app/api/report';
+const REPORT_URL = `${BASE_URL}/api/report`;
 
 interface Props {
   visible: boolean;

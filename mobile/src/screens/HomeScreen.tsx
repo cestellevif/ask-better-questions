@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import {tokens} from '../theme/tokens';
 import {normalizeUrl} from '../utils/url';
+import {BASE_URL} from '../config';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/RootNavigator';
 
@@ -80,7 +81,7 @@ export function HomeScreen({navigation}: Props) {
 
       <TouchableOpacity
         style={styles.privacyLink}
-        onPress={() => Linking.openURL('https://ask-better-questions-seven.vercel.app/privacy')}
+        onPress={() => Linking.openURL(`${BASE_URL}/privacy`)}
         accessibilityRole="link"
         accessibilityLabel="View privacy policy">
         <Text style={styles.privacyLinkText}>Privacy Policy</Text>

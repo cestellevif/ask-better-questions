@@ -1,18 +1,21 @@
 import React, {useEffect, useRef} from 'react';
 import {StatusBar} from 'react-native';
-import {NavigationContainer, createNavigationContainerRef} from '@react-navigation/native';
+import {NavigationContainer, createNavigationContainerRef, DarkTheme} from '@react-navigation/native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ShareMenuReactView from 'react-native-share-menu';
 import {RootNavigator} from './src/navigation/RootNavigator';
 import type {RootStackParamList} from './src/navigation/RootNavigator';
+import {isHttpUrl} from './src/utils/url';
+import {STORAGE_KEYS} from './src/storage/keys';
 
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
-function isHttpUrl(s?: string): s is string {
-  return !!s && /^https?:\/\//.test(s);
-}
+const NAV_THEME = {
+  ...DarkTheme,
+  colors: {...DarkTheme.colors, background: '#0f0f10'},
+};
 
 export default function App() {
   // Holds a URL from getInitialShare() that arrived before navigation was ready
@@ -49,7 +52,7 @@ export default function App() {
 
   async function handleNavigationReady() {
     // Show tutorial on first launch; share-intent navigation runs after
-    const seen = await AsyncStorage.getItem('@abq/tutorial_seen');
+    const seen = await AsyncStorage.getItem(STORAGE_KEYS.TUTORIAL_SEEN);
     if (!seen) {
       navigationRef.reset({routes: [{name: 'Tutorial'}]});
       return;
@@ -65,7 +68,7 @@ export default function App() {
     <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" backgroundColor="#0f0f10" />
-        <NavigationContainer ref={navigationRef} onReady={handleNavigationReady}>
+        <NavigationContainer ref={navigationRef} onReady={handleNavigationReady} theme={NAV_THEME}>
           <RootNavigator />
         </NavigationContainer>
       </SafeAreaProvider>

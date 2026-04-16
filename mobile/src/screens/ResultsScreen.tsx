@@ -16,7 +16,7 @@ import {ItemCard} from '../components/ItemCard';
 import {ReportModal} from '../components/ReportModal';
 import {useRollTransition} from '../hooks/useRollTransition';
 import {tokens} from '../theme/tokens';
-import type {Bundle, Item, Meter} from '../types/api';
+import type {Bundle, Item} from '../types/api';
 
 type CardData =
   | {kind: 'item'; item: Item}
@@ -30,7 +30,6 @@ const TABS: {key: keyof Bundle; label: string}[] = [
 
 interface Props {
   bundle: Bundle;
-  meter?: Meter;
   articleText?: string;
 }
 
@@ -104,7 +103,6 @@ export function ResultsScreen({bundle, articleText}: Props) {
     if (viewableItems.length > 0 && viewableItems[0].index !== null) {
       const newIndex = viewableItems[0].index;
       setActiveCardIndex(newIndex);
-      // cards is captured from closure — length announced for swipe navigation
       AccessibilityInfo.announceForAccessibility(`Card ${newIndex + 1} of ${cards.length}`);
     }
   });

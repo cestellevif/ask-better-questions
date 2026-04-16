@@ -1,8 +1,9 @@
 import type { AnalysisResult } from '../types/api';
+import { BASE_URL } from '../config';
 
-const API_URL = 'https://ask-better-questions-seven.vercel.app/api/questions';
-const APP_HEALTH_URL = 'https://ask-better-questions-seven.vercel.app/api/health';
-const EXTRACTOR_HEALTH_URL = 'https://ask-better-questions-seven.vercel.app/api/extractor-health';
+const API_URL = `${BASE_URL}/api/questions`;
+const APP_HEALTH_URL = `${BASE_URL}/api/health`;
+const EXTRACTOR_HEALTH_URL = `${BASE_URL}/api/extractor-health`;
 
 export type ProgressCallback = (stage: string) => void;
 
@@ -73,7 +74,6 @@ export async function analyzeUrl(
         result = {
           type: 'result',
           bundle: event.data.bundle,
-          meter: event.data.meter,
           articleText: typeof event.data.articleText === 'string'
             ? event.data.articleText
             : undefined,

@@ -26,6 +26,7 @@ function renderPhase(p: Phase, run: RunFn, navigation: NavProp) {
       <CandidateList
         candidates={p.candidates}
         onPick={url => run(p.sourceUrl, url)}
+        onCancel={() => navigation.goBack()}
       />
     );
   }
@@ -33,7 +34,6 @@ function renderPhase(p: Phase, run: RunFn, navigation: NavProp) {
     return (
       <ResultsScreen
         bundle={p.bundle}
-        meter={p.meter}
         articleText={p.articleText}
       />
     );
@@ -95,13 +95,7 @@ export function AnalysisScreen({route, navigation}: Props) {
     if (announcement) {
       AccessibilityInfo.announceForAccessibility(announcement);
     }
-  }, [
-    phase.kind,
-    (phase.kind === 'loading' || phase.kind === 'warmup')
-      ? phase.stage
-      : undefined,
-    navigation,
-  ]);
+  }, [phase, navigation]);
 
   // Re-run whenever the URL param changes
   useEffect(() => {

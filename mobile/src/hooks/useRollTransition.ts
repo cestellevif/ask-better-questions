@@ -7,6 +7,7 @@ import {
   runOnJS,
 } from 'react-native-reanimated';
 import {useReducedMotion} from './useReducedMotion';
+import {SPRING_SNAPPY} from '../theme/animation';
 
 const SLIDE_OFFSET = 48;
 const EXIT_DURATION = 220;
@@ -38,7 +39,7 @@ export function useRollTransition() {
             // Snap to right, then spring into place while fading in
             translateX.value = SLIDE_OFFSET;
             opacity.value = withTiming(1, {duration: ENTER_DURATION});
-            translateX.value = withSpring(0, {damping: 18, stiffness: 160});
+            translateX.value = withSpring(0, SPRING_SNAPPY);
           }
         },
       );

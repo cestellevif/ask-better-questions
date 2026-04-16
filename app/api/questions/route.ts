@@ -2,6 +2,7 @@
 import OpenAI from "openai";
 import { buildPrompt, type Mode as PromptMode } from "@/lib/prompt";
 import { extract, type ExtractResponse, type ExtractCandidate } from "@/lib/extractor";
+import { corsOptions } from "@/lib/cors";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // allow Vercel to stream for up to 5 min
@@ -23,7 +24,7 @@ function getClient(): OpenAI {
 // -----------------------------
 // Types
 // -----------------------------
-type Mode = PromptMode; // prompt.ts should now include "bundle"
+type Mode = PromptMode;
 
 type Label = "Words" | "Proof" | "Missing";
 
@@ -345,24 +346,7 @@ function normalizeBundle(parsed: unknown): BundledOutput {
 // CORS preflight
 // -----------------------------
 
-/**
- * Handles CORS preflight OPTIONS requests.
- *
- * Allows any origin to POST to this endpoint, enabling use from the Chrome extension
- * and third-party frontends.
- *
- * @returns 204 No Content with CORS headers.
- */
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
-}
+export { corsOptions as OPTIONS };
 
 // -----------------------------
 // Route handler (streaming NDJSON)

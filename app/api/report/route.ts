@@ -1,17 +1,10 @@
+import { corsOptions } from "@/lib/cors";
+
 export const runtime = "nodejs";
 
 const VALID_REASONS = new Set(["inappropriate", "inaccurate", "harmful", "other"]);
 
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
-}
+export { corsOptions as OPTIONS };
 
 export async function POST(req: Request) {
   let body: unknown;

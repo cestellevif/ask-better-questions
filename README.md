@@ -8,3 +8,4 @@ A media-literacy tool that helps readers understand how a piece of writing works
 - Focuses on writing choices, not moral judgment
 
 This is an early public MVP.
+Privacy policy: https://www.askbetterquestions.org/privacy 

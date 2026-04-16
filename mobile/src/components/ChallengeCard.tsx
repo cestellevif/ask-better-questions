@@ -58,7 +58,7 @@ export function ChallengeCard({tab}: {tab: keyof Bundle}) {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.28)',
+    borderColor: 'rgba(255,215,0,0.50)',
     borderStyle: 'dashed',
     borderRadius: tokens.radiusCard,
     padding: 14,

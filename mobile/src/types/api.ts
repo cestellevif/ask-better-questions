@@ -7,13 +7,6 @@ export type Item = {
   excerpt?: string;
 };
 
-export type Meter = {
-  value: number;
-  label: 'Supported' | 'Mixed support' | 'Unsupported';
-  glow?: number;
-  wave?: boolean;
-};
-
 export type ExtractCandidate = {
   title: string;
   url: string;
@@ -28,6 +21,6 @@ export type Bundle = {
 };
 
 export type AnalysisResult =
-  | { type: 'result'; bundle: Bundle; meter?: Meter; articleText?: string }
+  | { type: 'result'; bundle: Bundle; articleText?: string }
   | { type: 'choice'; sourceUrl: string; candidates: ExtractCandidate[] }
   | { type: 'error'; error: string };

@@ -122,7 +122,6 @@ export async function fetchHtml(url: string): Promise<string> {
   if (!ct.includes("text/html") && !ct.includes("application/xhtml+xml"))
     throw new FetchError(415, "Unsupported content-type — this URL does not appear to be a web page.");
 
-  // Stream with size cap
   if (!r.body) throw new FetchError(422, "Empty response from website.");
   const chunks: Uint8Array[] = [];
   let total = 0;
