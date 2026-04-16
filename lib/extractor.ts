@@ -226,8 +226,9 @@ export function guessStoryLinks(html: string, baseUrl: string): LinkCandidate[] 
 // ── Multi-story detection ────────────────────────────────────────────────────
 
 export function decideIsMulti(url: string, text: string, links: LinkCandidate[]): boolean {
-  // Archive/category path check runs BEFORE text-length guard
-  if (looksLikeArchivePath(url)) {
+  // Archive/category path and bare-domain/section paths run BEFORE text-length guard.
+  // Short headlines make score-based "strong" check unreliable for obvious hub shapes.
+  if (looksLikeArchivePath(url) || looksLikeSectionPath(url)) {
     if (links.length >= MIN_CANDIDATES || looksLikeHubText(text)) return true;
   }
 
@@ -235,9 +236,6 @@ export function decideIsMulti(url: string, text: string, links: LinkCandidate[])
   const top5      = links.slice(0, 5);
   const avgTop5   = top5.length ? top5.reduce((s, l) => s + l.score, 0) / top5.length : 0;
   const strong    = links.length >= MIN_CANDIDATES && topScore >= MIN_TOP_SCORE && avgTop5 >= MIN_AVG_TOP5;
-
-  // Long text is normally a single article — except on known hub URL shapes.
-  if (strong && (looksLikeArchivePath(url) || looksLikeSectionPath(url))) return true;
 
   if (text.length >= MIN_ARTICLE_CHARS) return false;
 

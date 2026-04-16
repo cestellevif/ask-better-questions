@@ -63,9 +63,9 @@ describe("looksLikeSectionPath", () => {
     expect(looksLikeSectionPath("https://cnn.com/politics/story-slug")).toBe(false);
   });
 
-  it("does not match homepage (no path segments)", () => {
-    expect(looksLikeSectionPath("https://cnn.com/")).toBe(false);
-    expect(looksLikeSectionPath("https://cnn.com")).toBe(false);
+  it("matches bare domain homepage (no path segments)", () => {
+    expect(looksLikeSectionPath("https://cnn.com/")).toBe(true);
+    expect(looksLikeSectionPath("https://cnn.com")).toBe(true);
   });
 
   it("returns false for invalid URL", () => {
