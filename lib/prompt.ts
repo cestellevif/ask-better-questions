@@ -281,8 +281,17 @@ Item guidance (enforced targeting):
 Words (ORDER OF PREFERENCE for which phrase to pick):
 1) Dehumanizing or group-flattening language (animals/vermin, "illegals," "thugs," "savages," "infestation," etc.).
 2) Degrading slurs/pejoratives (even if "milder"), or contempt labels used as shortcuts.
-3) Mindreading verbs or motive/intent phrasing presented as fact ("wanted," "trying," "knew," "refused to" without bridge).
-4) Attribution structures in headlines or ledes: "[X] [verb] [Y] for [Z]" where the
+3) Worthy/unworthy victim framing — adjectives, verbs, or descriptors that give one
+   party emotional weight ("innocent," "trapped," "terrified," "stranded") while the
+   other is named by role or label alone ("forces," "regime," "authorities"). These
+   choices shape who the reader feels for before any fact is given.
+4) Protagonist-directing language — heightened adjectives or asymmetric active/passive
+   verbs that cast one actor as the story's moral center. Who gets a human face, a
+   name, a voice? Who gets an institutional label and passive constructions? ("sailors
+   trapped at sea" vs "Iran shuts strait" — one humanizes, one abstracts.) Ask what
+   feeling the asymmetry creates about who matters in this story.
+5) Mindreading verbs or motive/intent phrasing presented as fact ("wanted," "trying," "knew," "refused to" without bridge).
+6) Attribution structures in headlines or ledes: "[X] [verb] [Y] for [Z]" where the
    reporter frames both X's stance AND the characterization of Y's action together —
    "blames," "accuses," "claims," "insists," "charges," "slams," scare quotes on Y's action.
 
@@ -302,11 +311,16 @@ Words (ORDER OF PREFERENCE for which phrase to pick):
    Note: attribution verbs applied to individuals from marginalized groups can activate
    identity-based stereotypes before the reader sees a single fact. Ask what feeling the
    verb creates about X, not just what it literally means.
-5) Vague moral/legal labels without a stated standard ("corrupt," "unethical," "un-American," "weaponized").
+7) Vague moral/legal labels without a stated standard ("corrupt," "unethical," "un-American," "weaponized").
 If none appear, pick the strongest "restraint" phrase or careful qualifier and teach why it earns trust.
 Note: In tribute, award, or ceremony articles, institutional honors language ("valor," "heroic,"
 "sacrifice," "extraordinary") is SUPPORTED — it reflects the official standard and is NOT
-a vague label under priority 5.
+a vague label under priority 7.
+
+STOCK PHRASE FILTER: Generic news boilerplate ("heightened tensions," "growing concerns,"
+"amid ongoing conflict," "escalating situation") appears in nearly every article of its type
+and teaches readers nothing specific about this article's choices. Deprioritize these unless
+no better target exists.
 
 REPORTER'S OWN WORDS (applies in ALL articles, including tribute/incident-report):
 Look for characterizations the REPORTER writes without quoting anyone:
@@ -369,19 +383,27 @@ Proof (MOST IMPORTANT FIX):
   Ask what the article adds BEYOND the record: historical context, scale, implications,
   perspectives, or what the event means — not whether the official account is accurate.
 
-Missing (ABSENCE-AS-SIGNAL):
-- Ask about a move the author chose not to make (motive attribution, standard, comparison, scope).
-- Explain in the "why" what the missing information would add to the text.
-- Missing can point to:
-  • restraint that preserves credibility,
+Missing (CONTEXT-AS-ANCHOR):
+- The primary target is context the reader needs to understand this story: historical
+  background that explains why this is happening now, affected parties or voices the
+  article leaves out, a comparison or scale that would ground the main claim, or what
+  the story assumes the reader already knows.
+- Ask the reader to NOTICE an absence — not to assume it is a flaw.
+- Explain in the "why" what that context would add.
+- Missing can also point to:
+  • restraint that preserves credibility — the author may have held back for good reason,
   • an unresolved standard that limits confidence,
-  • or conditional support that could strengthen a claim.
+  • or a comparison/timeline that would help the reader weigh the main claim.
+- DEFINITION QUESTIONS BANNED: Do NOT ask what a word or term means ("What does
+  'blockade' mean here?"). That is a comprehension question, not a context question.
+  Ask what background, comparison, or absent perspective helps the reader understand
+  the situation.
 - The question should ask the reader to NOTICE an absence, not assume it is a flaw.
-- Sometimes that absence is because a standard or comparison is not available, and help text should direct readers to seek clarification rather than assume bad faith.
+- Sometimes context is not available; direct readers to seek it rather than assume bad faith.
 - QUOTED CLAIMS: When a subject is quoted making a trend, scope, or causal claim ("life
   expectancy went down," "this is unprecedented," "it got worse"), do NOT ask what the
   subject needs to prove. Ask what context the ARTICLE could add to help the reader weigh
-  the quote: historical data, comparisons, timeframes, definitions, or other voices.
+  the quote: historical data, comparisons, timeframes, or other voices.
   WRONG: "What policy facts test her claim that life went down?"
   RIGHT: "What data or comparison does the story add to help you weigh this claim?"
 
@@ -606,8 +628,16 @@ HARD STRUCTURE RULES (ALL THREE SETS):
 WORDS ITEM — ORDER OF PREFERENCE (applies in every set):
 1) Dehumanizing or group-flattening language.
 2) Degrading slurs/pejoratives or contempt labels used as shortcuts.
-3) Mindreading verbs / motive phrasing presented as fact (no bridge).
-4) Attribution structures in headlines or ledes: "[X] [verb] [Y] for [Z]" —
+3) Worthy/unworthy victim framing — adjectives, verbs, or descriptors that give one
+   party emotional weight ("innocent," "trapped," "terrified," "stranded") while the
+   other is named by role or label alone ("forces," "regime," "authorities"). These
+   choices shape who the reader feels for before any fact is given.
+4) Protagonist-directing language — heightened adjectives or asymmetric active/passive
+   verbs that cast one actor as the story's moral center. Who gets a human face, a
+   name, a voice? Who gets an institutional label and passive constructions? Ask what
+   feeling the asymmetry creates about who matters in this story.
+5) Mindreading verbs / motive phrasing presented as fact (no bridge).
+6) Attribution structures in headlines or ledes: "[X] [verb] [Y] for [Z]" —
    "blames," "accuses," "claims," "insists," "slams," scare quotes on Y's action.
 
    ATTRIBUTION STRUCTURE RULE (follow in order):
@@ -622,10 +652,15 @@ WORDS ITEM — ORDER OF PREFERENCE (applies in every set):
 
    Note: attribution verbs applied to individuals can activate identity-based stereotypes
    before a single fact appears. Ask what feeling the verb creates about X.
-5) Vague moral/legal labels without a stated standard.
+7) Vague moral/legal labels without a stated standard.
 If none appear, pick the strongest restraint/qualifier and teach why it earns trust.
 Note: In tribute, award, or ceremony articles, institutional honors language ("valor," "heroic,"
-"sacrifice") is SUPPORTED — it reflects the official standard and is NOT a vague label under priority 5.
+"sacrifice") is SUPPORTED — it reflects the official standard and is NOT a vague label under priority 7.
+
+STOCK PHRASE FILTER: Generic news boilerplate ("heightened tensions," "growing concerns,"
+"amid ongoing conflict," "escalating situation") appears in nearly every article of its type
+and teaches readers nothing specific about this article's choices. Deprioritize these unless
+no better target exists.
 
 REPORTER'S OWN WORDS (applies in ALL articles, including tribute/incident-report):
 Look for characterizations the REPORTER writes without quoting anyone:
@@ -683,14 +718,23 @@ PROOF ITEM — MOST IMPORTANT FIX (applies in every set):
   identified," "court ruled"), do NOT ask what verifies it. Ask what the article adds
   BEYOND the record: context, implications, scale, history, perspectives.
 
-MISSING ITEM — ABSENCE-AS-SIGNAL (applies in every set):
-- Ask about a move the author chose not to make (standard, comparison, scope, restraint boundary).
-- Do not assume omission is a flaw; sometimes the standard is not available.
-- Be specific. "What all is not included?" does not help teach the reader. What one piece of information would create doubt, and is it addressed?
-- Explain in "why" what the missing info would add.
+MISSING ITEM — CONTEXT-AS-ANCHOR (applies in every set):
+- The primary target is context the reader needs to understand this story: historical
+  background that explains why this is happening now, affected parties or voices the
+  article leaves out, a comparison or scale that would ground the main claim, or what
+  the story assumes the reader already knows.
+- Ask the reader to NOTICE an absence — not to assume it is a flaw.
+- Explain in "why" what that context would add.
+- Missing can also point to restraint that preserves credibility, an unresolved standard,
+  or a comparison/timeline that helps weigh the main claim.
+- DEFINITION QUESTIONS BANNED: Do NOT ask what a word or term means. Ask what background,
+  comparison, or absent perspective helps the reader understand the situation.
+- Be specific — "What all is not included?" does not teach anyone anything.
+- Do not assume omission is a flaw; sometimes context is not available; direct readers to
+  seek it rather than assume bad faith.
 - QUOTED CLAIMS: When a subject is quoted making a trend, scope, or causal claim, do NOT
   ask what the subject needs to prove. Ask what context the ARTICLE could add to help the
-  reader weigh the quote: data, comparisons, timeframes, definitions, other voices.
+  reader weigh the quote: data, comparisons, timeframes, other voices.
   WRONG: "What policy facts test her claim that life went down?"
   RIGHT: "What data or comparison does the story add to help you weigh this claim?"
 
