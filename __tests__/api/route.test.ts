@@ -28,6 +28,10 @@ vi.mock("openai", () => ({
 
 vi.mock("@/lib/extractor", () => ({ extract: mockExtract }));
 
+vi.mock("@/lib/ratelimit", () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ limited: false, retryAfter: 0 }),
+}));
+
 import { POST } from "@/app/api/questions/route";
 
 // ---------------------------------------------------------------------------
@@ -574,5 +578,26 @@ describe("POST /api/questions — OpenAI failure handling", () => {
     expect(res.status).toBe(200);
     const events = await readStream(res);
     expect(events.some((e) => e.type === "error")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rate limiting
+// ---------------------------------------------------------------------------
+
+describe("POST /api/questions — rate limiting", () => {
+  it("returns 429 when rate limit is exceeded", async () => {
+    const { checkRateLimit } = await import("@/lib/ratelimit");
+    vi.mocked(checkRateLimit).mockResolvedValueOnce({ limited: true, retryAfter: 3600 });
+
+    const req = new Request("http://localhost/api/questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-forwarded-for": "1.2.3.4" },
+      body: JSON.stringify({ mode: "bundle", inputMode: "paste", text: "a".repeat(80) }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBe("3600");
   });
 });

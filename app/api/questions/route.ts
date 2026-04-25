@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { buildPrompt, type Mode as PromptMode } from "@/lib/prompt";
 import { extract, type ExtractResponse, type ExtractCandidate } from "@/lib/extractor";
 import { corsOptions } from "@/lib/cors";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // allow Vercel to stream for up to 5 min
@@ -367,6 +368,16 @@ export { corsOptions as OPTIONS };
  * @returns 200 response with Content-Type: application/x-ndjson and a ReadableStream body.
  */
 export async function POST(req: Request) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "anonymous";
+  const { limited, retryAfter } = await checkRateLimit(ip);
+  if (limited) {
+    return new Response("Too many requests", {
+      status: 429,
+      headers: { "Retry-After": String(retryAfter) },
+    });
+  }
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
