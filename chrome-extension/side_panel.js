@@ -52,6 +52,7 @@ const SLIDES = [
 let slideIdx       = 0;
 let lastSlideIdx   = -1;
 let tickerInterval = null;
+let tickerTimeout  = null;
 
 function showSlide(html) {
   tickerPanel.classList.remove("settle-in");
@@ -71,11 +72,12 @@ function nextSlide() {
 function startTicker() {
   showSlide(SLIDES[0]);
   slideIdx = 1;
-  setTimeout(nextSlide, 2600);
+  tickerTimeout = setTimeout(nextSlide, 2600);
   tickerInterval = setInterval(nextSlide, 5200);
 }
 
 function stopTicker() {
+  clearTimeout(tickerTimeout); tickerTimeout = null;
   if (tickerInterval) { clearInterval(tickerInterval); tickerInterval = null; }
 }
 
