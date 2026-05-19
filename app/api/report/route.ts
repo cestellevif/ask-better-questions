@@ -1,4 +1,5 @@
 import { corsOptions } from "@/lib/cors";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
@@ -7,6 +8,16 @@ const VALID_REASONS = new Set(["inappropriate", "inaccurate", "harmful", "other"
 export { corsOptions as OPTIONS };
 
 export async function POST(req: Request) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "anonymous";
+  const { limited, retryAfter } = await checkRateLimit(ip);
+  if (limited) {
+    return new Response("Too many requests", {
+      status: 429,
+      headers: { "Retry-After": String(retryAfter) },
+    });
+  }
+
   let body: unknown;
 
   try {
