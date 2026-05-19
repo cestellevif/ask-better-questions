@@ -203,7 +203,7 @@ function renderItems(items) {
     li.innerHTML = `
       <div class="item-body">
         <div class="item-left">
-          <span class="item-label label-${item.label}">${item.label}</span>
+          <span class="item-label label-${item.label.replace(/[^a-zA-Z]/g, '')}">${escHtml(item.label)}</span>
           <button class="item-toggle" aria-expanded="false" aria-controls="${whyId}" aria-label="Show explanation">›</button>
         </div>
         <span class="item-text">${escHtml(item.text)}</span>
