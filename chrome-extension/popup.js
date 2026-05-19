@@ -195,7 +195,7 @@ function renderItems(items) {
   for (const item of items) {
     const li = document.createElement("li");
     li.innerHTML = `
-      <span class="item-label label-${item.label.replace(/[^a-zA-Z]/g, '')}">${escHtml(item.label)}</span>
+      <span class="item-label label-${item.label.replace(/[^a-zA-Z0-9]/g, '')}">${escHtml(item.label)}</span>
       <p class="item-text">${escHtml(item.text)}</p>
       <p class="item-why">${escHtml(item.why)}</p>
     `;
