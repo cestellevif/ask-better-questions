@@ -499,8 +499,8 @@ function getActiveTab() {
 // ── Service wake-up ────────────────────────────────────────────────────────
 
 /**
- * Pings both Render health endpoints and waits for both to respond before
- * returning. Shows "Waking up server…" if either takes more than 3 s.
+ * Pings the Vercel health endpoint before starting analysis.
+ * Shows "Waking up server…" if it takes more than 3 s.
  * Always resolves — if a service is truly unreachable the analysis request
  * will surface the error directly.
  */
