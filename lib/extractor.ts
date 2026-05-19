@@ -43,7 +43,11 @@ const htmlCache = new Map<string, { expiresAt: number; html: string }>();
 
 function cacheGet(url: string): string | null {
   const hit = htmlCache.get(url);
-  if (!hit || Date.now() > hit.expiresAt) return null;
+  if (!hit) return null;
+  if (Date.now() > hit.expiresAt) {
+    htmlCache.delete(url);   // evict stale entry
+    return null;
+  }
   return hit.html;
 }
 
