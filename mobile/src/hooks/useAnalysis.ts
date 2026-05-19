@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {pingBothServices, analyzeUrl} from '../api/questions';
 import type {Bundle, ExtractCandidate} from '../types/api';
+import {STAGES} from '../constants/stages';
 
 export type Phase =
   | {kind: 'idle'}
@@ -26,7 +27,7 @@ export function useAnalysis() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setPhase({kind: 'warmup', stage: 'Starting up…'});
+    setPhase({kind: 'warmup', stage: STAGES.STARTING_UP});
 
     let warmupSkipped = false;
 
@@ -36,7 +37,7 @@ export function useAnalysis() {
       if (controller.signal.aborted) return;
       if (alive && !warmupSkipped) {
         warmupSkipped = true;
-        setPhase({kind: 'loading', stage: 'Fetching page…'});
+        setPhase({kind: 'loading', stage: STAGES.FETCHING_PAGE});
       }
     });
 
@@ -44,7 +45,7 @@ export function useAnalysis() {
     if (wakeTimerRef.current) clearTimeout(wakeTimerRef.current);
     wakeTimerRef.current = setTimeout(() => {
       setPhase(p =>
-        p.kind === 'warmup' ? {kind: 'warmup', stage: 'Let\'s have a look…'} : p,
+        p.kind === 'warmup' ? {kind: 'warmup', stage: STAGES.LETS_HAVE_A_LOOK} : p,
       );
     }, 5000);
 

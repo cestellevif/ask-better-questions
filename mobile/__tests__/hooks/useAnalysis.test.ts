@@ -1,6 +1,7 @@
 import {renderHook, act} from '@testing-library/react-native';
 import {useAnalysis} from '../../src/hooks/useAnalysis';
 import {analyzeUrl, pingBothServices} from '../../src/api/questions';
+import {STAGES} from '../../src/constants/stages';
 
 jest.mock('../../src/api/questions');
 const mockAnalyzeUrl = analyzeUrl as jest.MockedFunction<typeof analyzeUrl>;
@@ -41,7 +42,6 @@ describe('useAnalysis', () => {
     expect(result.current.phase).toEqual({
       kind: 'result',
       bundle: mockBundle,
-      meter: undefined,
       articleText: 'Body',
     });
   });
@@ -68,14 +68,14 @@ describe('useAnalysis', () => {
     expect(result.current.phase).toEqual({kind: 'error', message: 'Unexpected'});
   });
 
-  it('updates warmup stage to "Waking up server\u2026" after 5 seconds', async () => {
+  it('updates warmup stage to STAGES.LETS_HAVE_A_LOOK after 5 seconds', async () => {
     // analyzeUrl never resolves (simulates slow server)
     mockAnalyzeUrl.mockReturnValue(new Promise(() => {}));
     const {result} = renderHook(() => useAnalysis());
     act(() => { result.current.run('https://example.com'); });
-    expect(result.current.phase).toMatchObject({kind: 'warmup', stage: 'Starting up\u2026'});
+    expect(result.current.phase).toMatchObject({kind: 'warmup', stage: STAGES.STARTING_UP});
     act(() => jest.advanceTimersByTime(5000));
-    expect(result.current.phase).toMatchObject({kind: 'warmup', stage: 'Waking up server\u2026'});
+    expect(result.current.phase).toMatchObject({kind: 'warmup', stage: STAGES.LETS_HAVE_A_LOOK});
   });
 
   it('skips to loading immediately when ping succeeds', async () => {
