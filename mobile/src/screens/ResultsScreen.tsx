@@ -99,13 +99,7 @@ export function ResultsScreen({bundle, articleText}: Props) {
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
   const viewabilityConfig = useRef({viewAreaCoveragePercentThreshold: 50});
-  const onViewableItemsChanged = useRef(({viewableItems}: {viewableItems: {index: number | null}[]}) => {
-    if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-      const newIndex = viewableItems[0].index;
-      setActiveCardIndex(newIndex);
-      AccessibilityInfo.announceForAccessibility(`Card ${newIndex + 1} of ${cards.length}`);
-    }
-  });
+  const onViewableItemsChanged = useRef((_arg: {viewableItems: {index: number | null}[]}) => {});
 
   const paragraphs = useMemo(
     () => (articleText ? articleText.split(/\n+/).filter(p => p.trim()) : []),
@@ -124,6 +118,16 @@ export function ResultsScreen({bundle, articleText}: Props) {
     ],
     [bundle, displayedTab],
   );
+
+  useEffect(() => {
+    onViewableItemsChanged.current = ({viewableItems}: {viewableItems: {index: number | null}[]}) => {
+      if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+        const newIndex = viewableItems[0].index;
+        setActiveCardIndex(newIndex);
+        AccessibilityInfo.announceForAccessibility(`Card ${newIndex + 1} of ${cards.length}`);
+      }
+    };
+  }, [cards]);
 
   // Clear cached paragraph positions only when the article itself changes
   // (tab switches don't change paragraph layout, so onLayout won't re-fire)
