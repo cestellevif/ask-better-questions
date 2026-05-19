@@ -62,4 +62,10 @@ describe('App warm-launch share listener', () => {
     // No navigation should occur — just verify no throw
     expect(() => getShareCallback()({data: 'not a url'})).not.toThrow();
   });
+
+  it('does not crash when share data has text before the URL', () => {
+    expect(() =>
+      getShareCallback()({data: 'Check this out https://www.cbsnews.com/news/article'}),
+    ).not.toThrow();
+  });
 });

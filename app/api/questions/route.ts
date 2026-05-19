@@ -212,7 +212,11 @@ async function resolveInput(body: Body): Promise<ResolveResult> {
   const extracted = await extract(targetUrl, { include_candidates: true });
 
   if (!chosenUrl && extracted.is_multi) {
-    return { kind: "needs-choice", sourceUrl: extracted.url, candidates: extracted.candidates ?? [] };
+    const candidates = extracted.candidates ?? [];
+    if (candidates.length === 0) {
+      return { kind: "error", message: "This looks like a section page — please share a specific article URL instead." };
+    }
+    return { kind: "needs-choice", sourceUrl: extracted.url, candidates };
   }
 
   const text = (extracted.text ?? "").trim();

@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ShareMenuReactView from 'react-native-share-menu';
 import {RootNavigator} from './src/navigation/RootNavigator';
 import type {RootStackParamList} from './src/navigation/RootNavigator';
-import {isHttpUrl} from './src/utils/url';
+import {isHttpUrl, extractUrl} from './src/utils/url';
 import {STORAGE_KEYS} from './src/storage/keys';
 
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
@@ -28,7 +28,7 @@ export default function App() {
     const p = ShareMenuReactView.getInitialShare();
     if (!p) return;
     p.then((share: {data?: string} | null) => {
-      const url = share?.data;
+      const url = extractUrl(share?.data);
       if (!isHttpUrl(url)) return;
       if (navigationRef.isReady()) {
         navigationRef.navigate('Analysis', {url});
@@ -42,8 +42,9 @@ export default function App() {
   useEffect(() => {
     const listener = ShareMenuReactView.addNewShareListener(
       (share: {data?: string} | null) => {
-        if (isHttpUrl(share?.data)) {
-          navigationRef.navigate('Analysis', {url: share.data});
+        const url = extractUrl(share?.data);
+        if (isHttpUrl(url)) {
+          navigationRef.navigate('Analysis', {url});
         }
       },
     );

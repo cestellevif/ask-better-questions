@@ -196,8 +196,16 @@ describe("decideIsMulti", () => {
     expect(decideIsMulti("https://cnn.com/politics", LONG_TEXT, strongLinks())).toBe(true);
   });
 
-  it("returns false for section path with insufficient link signal", () => {
-    expect(decideIsMulti("https://cnn.com/politics", LONG_TEXT, strongLinks(3))).toBe(false);
+  it("returns true for section path with any links found (foxnews.com/politics case)", () => {
+    // Section paths are unambiguously hubs — MIN_CANDIDATES (6) is too strict.
+    // Even 1–3 story links found is enough to confirm it's a hub.
+    expect(decideIsMulti("https://cnn.com/politics", LONG_TEXT, strongLinks(3))).toBe(true);
+    expect(decideIsMulti("https://foxnews.com/politics", LONG_TEXT, strongLinks(1))).toBe(true);
+  });
+
+  it("returns true for section path even with no links (JS-rendered hub, e.g. foxnews.com/politics)", () => {
+    expect(decideIsMulti("https://cnn.com/politics", LONG_TEXT, [])).toBe(true);
+    expect(decideIsMulti("https://foxnews.com/politics", LONG_TEXT, [])).toBe(true);
   });
 
   it("returns true for short text with strong link signal", () => {
@@ -205,7 +213,8 @@ describe("decideIsMulti", () => {
   });
 
   it("returns false for short text without strong link signal", () => {
-    expect(decideIsMulti("https://example.com/some-page", SHORT_TEXT, [])).toBe(false);
+    // Multi-segment path — not a section path, so short text + no links = not a hub
+    expect(decideIsMulti("https://example.com/some-page/detail", SHORT_TEXT, [])).toBe(false);
   });
 
   it("returns false for long text non-section path even with strong links (links not gathered in practice)", () => {

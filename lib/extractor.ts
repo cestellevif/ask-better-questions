@@ -227,9 +227,14 @@ export function guessStoryLinks(html: string, baseUrl: string): LinkCandidate[] 
 // ── Multi-story detection ────────────────────────────────────────────────────
 
 export function decideIsMulti(url: string, text: string, links: LinkCandidate[]): boolean {
-  // Archive/category path and bare-domain/section paths run BEFORE text-length guard.
-  // Short headlines make score-based "strong" check unreliable for obvious hub shapes.
-  if (looksLikeArchivePath(url) || looksLikeSectionPath(url)) {
+  // Section paths (/politics, /world, bare domain) are unambiguously hubs.
+  // Always treat them as multi — even if JS rendering means we find 0 links.
+  // Empty candidates are handled upstream (returns a clear error to the user).
+  if (looksLikeSectionPath(url)) return true;
+
+  // Archive/category paths run BEFORE the text-length guard but still need MIN_CANDIDATES
+  // since archive-token matches can be less precise.
+  if (looksLikeArchivePath(url)) {
     if (links.length >= MIN_CANDIDATES || looksLikeHubText(text)) return true;
   }
 

@@ -148,7 +148,8 @@ export default function Page() {
     }
 
     try {
-      const urlToUse = (opts?.urlOverride ?? url).trim();
+      const rawUrl = (opts?.urlOverride ?? url).trim();
+      const urlToUse = /^https?:\/\//i.test(rawUrl) ? rawUrl : "https://" + rawUrl;
       const chosenToUse = chosenFromClick || chosenUrl.trim();
 
       const payload =
