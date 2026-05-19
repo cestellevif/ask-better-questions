@@ -31,9 +31,13 @@ export async function checkRateLimit(
 ): Promise<{ limited: boolean; retryAfter: number }> {
   const rl = getRatelimit();
   if (!rl) return { limited: false, retryAfter: 0 };
-  const { success, reset } = await rl.limit(ip);
-  return {
-    limited: !success,
-    retryAfter: Math.ceil((reset - Date.now()) / 1000),
-  };
+  try {
+    const { success, reset } = await rl.limit(ip);
+    if (success) return { limited: false, retryAfter: 0 };
+    const retryAfter = Math.ceil((reset - Date.now()) / 1000);
+    return { limited: true, retryAfter };
+  } catch (err) {
+    console.warn("[ratelimit] Redis error — failing open:", err);
+    return { limited: false, retryAfter: 0 };
+  }
 }
