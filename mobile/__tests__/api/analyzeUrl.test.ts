@@ -36,7 +36,7 @@ describe('analyzeUrl', () => {
       {type: 'result', data: {bundle: mockBundle, articleText: 'Article body'}},
     ));
     const result = await analyzeUrl('https://example.com', null, () => {}, new AbortController().signal);
-    expect(result).toEqual({type: 'result', bundle: mockBundle, meter: undefined, articleText: 'Article body'});
+    expect(result).toEqual({type: 'result', bundle: mockBundle, articleText: 'Article body'});
   });
 
   it('returns result without articleText when field is missing', async () => {
