@@ -6,7 +6,7 @@ export default function PrivacyPage() {
   return (
     <main style={{ maxWidth: 680, margin: "0 auto", padding: "48px 24px", fontFamily: "system-ui, sans-serif", lineHeight: 1.7, color: "#ffffff" }}>
       <h1 style={{ fontSize: "1.8rem", fontWeight: 700, marginBottom: 8 }}>Privacy Policy</h1>
-      <p style={{ color: "#252525", marginBottom: 32 }}>Last updated: April 2026</p>
+      <p style={{ color: "var(--vox-muted)", marginBottom: 32 }}>Last updated: April 2026</p>
 
       <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginTop: 32 }}>About this policy</h2>
       <p>This policy covers the Ask Better Questions Chrome extension, website, and Android app (available on Google Play). All surfaces share the same backend API and the same data practices described here.</p>

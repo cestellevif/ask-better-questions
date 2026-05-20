@@ -35,8 +35,6 @@ export type ExtractResponse = {
   candidates: ExtractCandidate[];
 };
 
-type LinkCandidate = ExtractCandidate; // same shape internally
-
 // ── HTML cache ───────────────────────────────────────────────────────────────
 
 const htmlCache = new Map<string, { expiresAt: number; html: string }>();
@@ -193,13 +191,13 @@ export function looksLikeHubText(text: string): boolean {
 
 // ── Story link extraction ────────────────────────────────────────────────────
 
-export function guessStoryLinks(html: string, baseUrl: string): LinkCandidate[] {
+export function guessStoryLinks(html: string, baseUrl: string): ExtractCandidate[] {
   const { document: doc } = parseHTML(html);
   const root: Element = doc.querySelector("main") ?? doc.body;
   const base = new URL(baseUrl);
   const baseRoot = base.hostname.replace(/^www\./, "");
   const seen = new Set<string>();
-  const links: LinkCandidate[] = [];
+  const links: ExtractCandidate[] = [];
 
   for (const el of root.querySelectorAll("a[href]")) {
     const text = (el.textContent ?? "").replace(/\s+/g, " ").trim();
@@ -230,7 +228,7 @@ export function guessStoryLinks(html: string, baseUrl: string): LinkCandidate[] 
 
 // ── Multi-story detection ────────────────────────────────────────────────────
 
-export function decideIsMulti(url: string, text: string, links: LinkCandidate[]): boolean {
+export function decideIsMulti(url: string, text: string, links: ExtractCandidate[]): boolean {
   // Section paths (/politics, /world, bare domain) are unambiguously hubs.
   // Always treat them as multi — even if JS rendering means we find 0 links.
   // Empty candidates are handled upstream (returns a clear error to the user).
@@ -266,7 +264,7 @@ export async function extract(
   const html = await fetchHtml(url);
   const { title, text: rawText } = extractText(html, url);
 
-  let links: LinkCandidate[] = [];
+  let links: ExtractCandidate[] = [];
   if (include_candidates && (rawText.length < MIN_ARTICLE_CHARS || looksLikeArchivePath(url) || looksLikeSectionPath(url))) {
     links = guessStoryLinks(html, url);
   }

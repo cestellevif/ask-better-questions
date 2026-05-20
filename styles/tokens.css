@@ -12,6 +12,7 @@
   /* Fonts */
   --font-main: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-header: 'Helvetica Neue Bold', Helvetica, Arial, sans-serif;
+  --font-ask-serif: Georgia;
 
   /* Theme tokens (light defaults) */
   --vox-bg: var(--vox-light);

@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   btnText: {
-    color: '#000',
+    color: tokens.bg,
     fontSize: 15,
     fontWeight: '700',
   },

@@ -10,11 +10,6 @@ export const tokens = {
   border: 'rgba(255,255,255,0.28)',
   muted: 'rgba(255,255,255,0.68)',
 
-  // Slate (warmup screen)
-  slateBg: '#1f2933',
-  slateText: '#f5f7fa',
-  slateMuted: 'rgba(245,247,250,0.72)',
-
   // Shape
   radiusCard: 10,
   radiusPill: 999,

@@ -96,7 +96,7 @@
   opacity: 0.78;
 }
 
-/* ✅ FIX: active vs inactive styles were flipped in your earlier CSS.
+/* FIX: active vs inactive styles were flipped in your earlier CSS.
    Active tab should look "selected". */
 .input-tab.active {
   opacity: 1;
@@ -231,7 +231,7 @@
   margin-top: 12px;
 }
 
-/* ✅ Prevent flex children (status text, meter) from forcing overflow */
+/* Prevent flex children (status text, meter) from forcing overflow */
 .action-row > * {
   min-width: 0;
 }
@@ -305,7 +305,7 @@ details[open] .summary::after {
   content: "▴";
 }
 
-/* ✅ Caption spacing fix */
+/* Caption spacing fix */
 .caption {
   color: var(--vox-muted);
   border-left: 2px solid var(--vox-border);

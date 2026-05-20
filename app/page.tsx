@@ -138,7 +138,7 @@ export default function Page() {
     setError(null);
     setItems(null);
     setBundle(null);
-    setShowInfo(false); // ✅ auto-hide when a query is run
+    setShowInfo(false); // auto-hide when a query is run
 
     const chosenFromClick = opts?.chosenUrlOverride?.trim() ?? "";
     if (!chosenFromClick) {
@@ -521,7 +521,7 @@ export default function Page() {
       {items && (
         <section className="results">
           {items.map((it, i) => (
-            <details key={i} className="vox-card">
+            <details key={it.label} className="vox-card">
               <summary className="summary">
                 <strong>{it.label}:</strong> {it.text}
               </summary>
