@@ -54,6 +54,7 @@ export function HomeScreen({navigation}: Props) {
 
       <Text style={styles.inputLabel}>Article URL</Text>
       <TextInput
+        testID="url-input"
         style={styles.input}
         value={url}
         onChangeText={setUrl}
@@ -69,6 +70,7 @@ export function HomeScreen({navigation}: Props) {
       />
 
       <TouchableOpacity
+        testID="analyze-button"
         style={[styles.btn, !url.trim() && styles.btnDisabled]}
         onPress={handleAnalyze}
         disabled={!url.trim()}

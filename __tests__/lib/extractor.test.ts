@@ -1,11 +1,27 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   looksLikeArchivePath,
   looksLikeSectionPath,
   looksLikeHubText,
   guessStoryLinks,
   decideIsMulti,
+  isPublicHttpUrl,
+  fetchHtml,
 } from "@/lib/extractor";
+
+// ── DNS mock for isPublicHttpUrl tests ────────────────────────────────────────
+
+const { mockResolve4, mockResolve6 } = vi.hoisted(() => ({
+  mockResolve4: vi.fn().mockResolvedValue([]),
+  mockResolve6: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("node:dns/promises", () => ({
+  default: {
+    resolve4: (...args: unknown[]) => mockResolve4(...args),
+    resolve6: (...args: unknown[]) => mockResolve6(...args),
+  },
+}));
 
 // ── looksLikeArchivePath ──────────────────────────────────────────────────────
 
@@ -219,5 +235,103 @@ describe("decideIsMulti", () => {
 
   it("returns false for long text non-section path even with strong links (links not gathered in practice)", () => {
     expect(decideIsMulti("https://example.com/2024/long/article/path", LONG_TEXT, strongLinks())).toBe(false);
+  });
+});
+
+// ── isPublicHttpUrl ───────────────────────────────────────────────────────────
+
+describe("isPublicHttpUrl", () => {
+  beforeEach(() => {
+    mockResolve4.mockReset().mockResolvedValue([]);
+    mockResolve6.mockReset().mockResolvedValue([]);
+  });
+
+  it("rejects ftp:// protocol", async () => {
+    expect(await isPublicHttpUrl("ftp://example.com")).toBe(false);
+  });
+
+  it("rejects localhost", async () => {
+    expect(await isPublicHttpUrl("http://localhost/foo")).toBe(false);
+  });
+
+  it("rejects .local domains", async () => {
+    expect(await isPublicHttpUrl("http://mydevbox.local/api")).toBe(false);
+  });
+
+  it("rejects malformed URLs", async () => {
+    expect(await isPublicHttpUrl("not-a-url")).toBe(false);
+  });
+
+  it("rejects private IPv4 addresses", async () => {
+    mockResolve4.mockResolvedValue(["192.168.1.1"]);
+    expect(await isPublicHttpUrl("http://internal.corp")).toBe(false);
+  });
+
+  it("rejects loopback addresses", async () => {
+    mockResolve4.mockResolvedValue(["127.0.0.1"]);
+    expect(await isPublicHttpUrl("http://loopback.test")).toBe(false);
+  });
+
+  it("accepts public IP addresses", async () => {
+    mockResolve4.mockResolvedValue(["93.184.216.34"]);
+    expect(await isPublicHttpUrl("https://example.com")).toBe(true);
+  });
+
+  it("rejects hosts with no DNS records", async () => {
+    mockResolve4.mockResolvedValue([]);
+    mockResolve6.mockResolvedValue([]);
+    expect(await isPublicHttpUrl("https://nonexistent.example.invalid")).toBe(false);
+  });
+});
+
+// ── fetchHtml error paths ─────────────────────────────────────────────────────
+
+describe("fetchHtml error paths", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function mockFetch(response: object) {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+  }
+
+  it("throws on HTTP 403", async () => {
+    mockFetch({ ok: false, status: 403, headers: { get: () => null }, body: null });
+    await expect(fetchHtml("https://example.com/r403")).rejects.toThrow(/restricted/i);
+  });
+
+  it("throws on HTTP 404", async () => {
+    mockFetch({ ok: false, status: 404, headers: { get: () => null }, body: null });
+    await expect(fetchHtml("https://example.com/r404")).rejects.toThrow(/not found/i);
+  });
+
+  it("throws on HTTP 429 with status 429", async () => {
+    mockFetch({ ok: false, status: 429, headers: { get: () => null }, body: null });
+    await expect(fetchHtml("https://example.com/r429")).rejects.toMatchObject({ status: 429 });
+  });
+
+  it("throws on non-HTML content-type with status 415", async () => {
+    mockFetch({
+      ok: true, status: 200,
+      headers: { get: (h: string) => h === "content-type" ? "application/json" : null },
+      body: {},
+    });
+    await expect(fetchHtml("https://example.com/r415")).rejects.toMatchObject({ status: 415 });
+  });
+
+  it("throws when response body exceeds 5 MB with status 413", async () => {
+    const bigChunk = new Uint8Array(5_000_001);
+    let read = false;
+    const reader = { read: vi.fn(async () => {
+      if (read) return { done: true, value: undefined };
+      read = true;
+      return { done: false, value: bigChunk };
+    }) };
+    mockFetch({
+      ok: true, status: 200,
+      headers: { get: (h: string) => h === "content-type" ? "text/html" : null },
+      body: { getReader: () => reader },
+    });
+    await expect(fetchHtml("https://example.com/r413")).rejects.toMatchObject({ status: 413 });
   });
 });
