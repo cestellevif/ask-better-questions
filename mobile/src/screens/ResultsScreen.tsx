@@ -51,13 +51,24 @@ export function buildSegments(text: string, excerpts: string[]): Segment[] {
     const needle = raw.trim();
     if (!needle) continue;
     let idx = text.indexOf(needle);
+    let matchLength = needle.length;
     if (idx === -1) {
       const collapsed = text.replace(/\s+/g, ' ');
-      const needleCollapsed = needle.replace(/\s+/g, ' ');
-      idx = collapsed.indexOf(needleCollapsed);
+      const needleCollapsed = needle.replace(/\s+/g, ' ').trim();
+      if (collapsed.includes(needleCollapsed)) {
+        // Re-find the actual span in the original text using a regex that
+        // allows \s+ between words, so the index is into the original string.
+        const escaped = needleCollapsed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = new RegExp(escaped.replace(/ /g, '\\s+'));
+        const match = pattern.exec(text);
+        if (match) {
+          idx = match.index;
+          matchLength = match[0].length;
+        }
+      }
     }
     if (idx !== -1) {
-      ranges.push({start: idx, end: idx + needle.length});
+      ranges.push({start: idx, end: idx + matchLength});
     }
   }
 

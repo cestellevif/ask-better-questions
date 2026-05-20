@@ -63,4 +63,19 @@ describe('buildSegments', () => {
     const result = buildSegments('Hello world', ['', '  ']);
     expect(result).toEqual([{text: 'Hello world', highlight: false}]);
   });
+
+  it('correctly segments when excerpt appears after multiple spaces in original text', () => {
+    // Original has multiple spaces inside the text AND in the excerpt (different spacing).
+    // This forces the collapsed fallback path. The match index from collapsed string
+    // must NOT be used to slice the original — it must be remapped.
+    // text has 4 spaces after "Once"; excerpt has 1 space (so exact match fails)
+    const text = 'Once    the fox jumped over the fence.';
+    const excerpt = 'the fox  jumped'; // double-space in excerpt won't match exactly
+    const segments = buildSegments(text, [excerpt]);
+    const highlighted = segments.filter(s => s.highlight);
+    expect(highlighted).toHaveLength(1);
+    // Verify the non-highlighted prefix contains the original spacing
+    expect(segments[0].highlight).toBe(false);
+    expect(segments[0].text).toBe('Once    ');
+  });
 });
